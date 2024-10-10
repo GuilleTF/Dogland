@@ -6,6 +6,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 import '../home_screen.dart';
+import 'legal_info_screen.dart'; // Importa la pantalla de información legal
 import '../../widgets/colors_utils.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -34,6 +35,9 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: hexStringToColor("CB2B93"),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -107,6 +111,22 @@ class LoginScreen extends StatelessWidget {
                   child: Text(
                     'Registrarse',
                     style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                // Añade el enlace a la pantalla de términos y condiciones aquí
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (context) => LegalInfoScreen()), // La pantalla que creamos para la información legal
+                    );
+                  },
+                  child: Text(
+                    'Términos y Política de Privacidad',
+                    style: TextStyle(
+                      color: Colors.white,
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
               ],
