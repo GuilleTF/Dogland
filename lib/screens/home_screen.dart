@@ -4,6 +4,7 @@ import '../widgets/bottom_navbar.dart';
 import 'login/login_screen.dart';
 import 'comercios/comercios_screen.dart';
 import 'perros/razas_screen.dart';
+import 'perfil_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -12,7 +13,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-
+  final String userRole = 'comerciante';
+  
   List<Widget> _pages = [];
 
   @override
@@ -22,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _buildHomeContent(), // Pantalla de inicio con botones dinámicos
       Container(color: Colors.red), // Favoritos (Placeholder)
       Container(color: Colors.blue), // Mensajes (Placeholder)
-      Container(color: Colors.green), // Perfil (Placeholder)
+      PerfilScreen(role: userRole), // Perfil (Placeholder)
       ComerciosScreen(), // Pantalla de Comercios
       RazasScreen(), // Pantalla de Razas de Perros
     ];
@@ -41,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 2:
         return 'Mensajes';
       case 3:
-        return ''; // Perfil sin AppBar
+        return 'Perfil';
       case 4:
         return 'Comercios';
       case 5:
@@ -149,17 +151,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: _selectedIndex == 3 ? null : AppBar(
         backgroundColor: Colors.purple,
-        title: Text(_getTitle()),
+        title: Text(
+          _getTitle(),
+          style: 
+            TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
         leading: (_selectedIndex == 4 || _selectedIndex == 5)
             ? IconButton(
-                icon: Icon(Icons.arrow_back),
+                icon: Icon(Icons.arrow_back, color: Colors.white,),
                 onPressed: () => _onItemTapped(0), // Regresar a inicio
               )
             : null,
         actions: _selectedIndex == 0
             ? [
                 IconButton(
-                  icon: Icon(Icons.logout),
+                  icon: Icon(Icons.logout, color: Colors.white),
                   onPressed: () {
                     FirebaseAuth.instance.signOut().then((value) {
                       Navigator.pushAndRemoveUntil(
