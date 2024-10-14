@@ -23,8 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
       Container(color: Colors.red), // Favoritos (Placeholder)
       Container(color: Colors.blue), // Mensajes (Placeholder)
       Container(color: Colors.green), // Perfil (Placeholder)
-      ComerciosScreen(onBackToHome: () => _onItemTapped(0)), // Pantalla de Comercios
-      RazasScreen(onBackToHome: () => _onItemTapped(0)), // Pantalla de Razas de Perros
+      ComerciosScreen(), // Pantalla de Comercios
+      RazasScreen(), // Pantalla de Razas de Perros
     ];
   }
 
@@ -147,28 +147,32 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _selectedIndex != 3
-          ? AppBar(
-              backgroundColor: Colors.purple,
-              title: Text(_getTitle()),
-              actions: _selectedIndex == 0
-                  ? [
-                      IconButton(
-                        icon: Icon(Icons.logout),
-                        onPressed: () {
-                          FirebaseAuth.instance.signOut().then((value) {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (context) => LoginScreen()),
-                              (route) => false,
-                            );
-                          });
-                        },
-                      ),
-                    ]
-                  : null,
-            )
-          : null, // Oculta AppBar si _selectedIndex == 3
+      appBar: _selectedIndex == 3 ? null : AppBar(
+        backgroundColor: Colors.purple,
+        title: Text(_getTitle()),
+        leading: (_selectedIndex == 4 || _selectedIndex == 5)
+            ? IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () => _onItemTapped(0), // Regresar a inicio
+              )
+            : null,
+        actions: _selectedIndex == 0
+            ? [
+                IconButton(
+                  icon: Icon(Icons.logout),
+                  onPressed: () {
+                    FirebaseAuth.instance.signOut().then((value) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                        (route) => false,
+                      );
+                    });
+                  },
+                ),
+              ]
+            : null,
+      ),
       body: IndexedStack(
         index: _selectedIndex,
         children: _pages,
