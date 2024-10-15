@@ -149,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _selectedIndex == 3 ? null : AppBar(
+      appBar: AppBar(
         backgroundColor: Colors.purple,
         title: Text(
           _getTitle(),
@@ -163,22 +163,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () => _onItemTapped(0), // Regresar a inicio
               )
             : null,
-        actions: _selectedIndex == 0
-            ? [
-                IconButton(
-                  icon: Icon(Icons.logout, color: Colors.white),
-                  onPressed: () {
-                    FirebaseAuth.instance.signOut().then((value) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
-                        (route) => false,
-                      );
-                    });
-                  },
-                ),
-              ]
-            : null,
+        actions: [
+        if (_selectedIndex == 3) // Mostrar en Inicio y Perfil
+          IconButton(
+            icon: Icon(Icons.logout, color: Colors.white),
+            onPressed: () {
+              FirebaseAuth.instance.signOut().then((value) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                  (route) => false,
+                );
+              });
+            },
+          ),
+        ],
       ),
       body: IndexedStack(
         index: _selectedIndex,

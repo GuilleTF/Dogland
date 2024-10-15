@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../widgets/colors_utils.dart';
+import '../../utils/colors_utils.dart';
 import '../home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -16,12 +16,15 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
   final TextEditingController _locationController = TextEditingController();
+  final FocusNode _locationFocusNode = FocusNode();
+  final FocusNode _phoneFocusNode = FocusNode();
   LatLng? _locationCoordinates;
   String? _selectedRole = 'Usuario'; // Preseleccionado
 
   Future<void> _registerUser() async {
     // Guarda y valida el formulario completo
     bool isFormValid = _formKey.currentState?.saveAndValidate() ?? false;
+    if (!isFormValid) return;
 
     // Imprimir valores actuales para depuración
     print("Formulario válido: $isFormValid");
@@ -39,6 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     String? confirmPassword = formData['confirm_password'];
     String? username = formData['username'];
     String? role = formData['role'];
+    String? phoneNumber = formData['phone_number'];
 
     // Imprimir valor de role para confirmar su estado
     print("Valor de role: $role");
@@ -79,6 +83,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    if ((role == 'Comercio' || role == 'Criador') && (phoneNumber == null || phoneNumber.isEmpty)) {
+      _showError("Por favor, ingresa un número de teléfono.");
+      return;
+    }
+
     // Si todos los campos están completos y válidos, intenta registrar al usuario
     try {
       UserCredential userCredential = await FirebaseAuth.instance
@@ -88,6 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'username': username,
         'email': email,
         'role': role,
+        'phoneNumber': phoneNumber,
         'location': _locationCoordinates != null
             ? GeoPoint(_locationCoordinates!.latitude, _locationCoordinates!.longitude)
             : null,
@@ -102,6 +112,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       _showError("Error desconocido: $e");
     }
+  }
+
+  @override
+  void dispose() {
+    _locationController.dispose();
+    _locationFocusNode.dispose();
+    _phoneFocusNode.dispose();
+    super.dispose();
   }
 
   // Método para mostrar un SnackBar con un mensaje de error
@@ -196,7 +214,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     labelText: 'Selecciona tu Rol',
                     labelStyle: TextStyle(color: Colors.white),
                   ),
-                  items: ['Usuario', 'Comercio', 'Criador']
+                  items: ['Usuario', 'Comercio', 'Criador','Admin']
                       .map((role) => DropdownMenuItem(
                             value: role,
                             child: Text(
@@ -215,6 +233,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
                 if (_selectedRole == 'Comercio' || _selectedRole == 'Criador')
+                  FormBuilderTextField(
+                    name: 'phone_number',
+                    focusNode: _phoneFocusNode,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: 'Número de Teléfono',
+                      labelStyle: TextStyle(color: Colors.white),
+                    ),
+                    validator: FormBuilderValidators.compose([
+                      FormBuilderValidators.required(),
+                      FormBuilderValidators.numeric(),
+                      FormBuilderValidators.minLength(9, errorText: 'El número debe tener al menos 9 dígitos'),
+                    ]),
+                  ),
+                if (_selectedRole == 'Comercio' || _selectedRole == 'Criador')
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: GooglePlaceAutoCompleteTextField(
@@ -227,6 +260,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       debounceTime: 800,
                       isLatLngRequired: true,
+                      focusNode: _locationFocusNode,
                       getPlaceDetailWithLatLng: (prediction) {
                         setState(() {
                           _locationCoordinates = LatLng(
