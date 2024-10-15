@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class UserProfileWidget extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController descriptionController;
+  final TextEditingController phoneController;
   final String location;
   final Function(String) onLocationChanged;
   final Function() onSave;
@@ -12,6 +13,7 @@ class UserProfileWidget extends StatelessWidget {
   UserProfileWidget({
     required this.nameController,
     required this.descriptionController,
+    required this.phoneController,
     required this.location,
     required this.onLocationChanged,
     required this.onSave,
@@ -33,8 +35,9 @@ class UserProfileWidget extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         
-        // Descripción - visible solo si el rol no es "Usuario"
-        if (role != 'Usuario')
+        if (role != 'Usuario') ...[
+        
+          // Descripción - visible solo si el rol no es "Usuario"
           TextField(
             controller: descriptionController,
             decoration: const InputDecoration(
@@ -42,8 +45,30 @@ class UserProfileWidget extends StatelessWidget {
               labelStyle: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
+          const SizedBox(height: 10),
+
+          // Teléfono - visible solo si el rol no es "Usuario"
+          TextField(
+            controller: phoneController,
+            decoration: const InputDecoration(
+              labelText: 'Número de Teléfono',
+              labelStyle: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 10),
+        
+          // Ubicación - visible solo si el rol no es "Usuario"
+          TextField(
+            controller: TextEditingController(text: location),
+            decoration: const InputDecoration(
+              labelText: 'Ubicación',
+              labelStyle: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            onChanged: onLocationChanged,
+          ),
         
         const SizedBox(height: 10),
+        ],
 
         // Correo Electrónico - siempre visible, pero solo lectura
         TextField(
@@ -54,19 +79,6 @@ class UserProfileWidget extends StatelessWidget {
           ),
           readOnly: true,
         ),
-        
-        const SizedBox(height: 10),
-
-        // Ubicación - visible solo si el rol no es "Usuario"
-        if (role != 'Usuario')
-          TextField(
-            controller: TextEditingController(text: location),
-            decoration: const InputDecoration(
-              labelText: 'Ubicación',
-              labelStyle: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            onChanged: onLocationChanged,
-          ),
         
         const SizedBox(height: 10),
 

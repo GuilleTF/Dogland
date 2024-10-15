@@ -25,6 +25,7 @@ class PerfilScreen extends StatefulWidget {
 class _PerfilScreenState extends State<PerfilScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   String _location = 'Ubicación desconocida';
   String _email = '';
   String? _profileImageUrl;
@@ -49,6 +50,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       setState(() {
         _nameController.text = userDataMap?['username'] ?? '';
         _descriptionController.text = userDataMap?['description'] ?? '';
+        _phoneController.text = userDataMap?['phoneNumber'] ?? '';
         _email = userDataMap?['email'] ?? '';
         userRole = userDataMap?['role'] ?? '';
         _profileImageUrl = userDataMap?['profileImage'];
@@ -102,6 +104,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       final data = {
         'username': _nameController.text,
         'description': _descriptionController.text,
+        'phoneNumber': _phoneController.text,
         'location': _locationCoordinates != null
             ? GeoPoint(_locationCoordinates!.latitude, _locationCoordinates!.longitude)
             : null,
@@ -172,45 +175,38 @@ class _PerfilScreenState extends State<PerfilScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-             // Añadir margen superior al contenedor de la foto de perfil
-          Padding(
-            padding: const EdgeInsets.only(top: 20), // Ajusta el valor del margen superior
-            child: GestureDetector(
-              onTap: _pickProfileImage,
-              child: CircleAvatar(
-                radius: 60, // Tamaño ajustado para una foto de perfil más grande
-                backgroundImage: _profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null,
-                child: _profileImageUrl == null ? const Icon(Icons.add_a_photo, size: 50) : null,
+            Padding(
+              padding: const EdgeInsets.only(top: 20), // Ajusta el valor del margen superior
+              child: GestureDetector(
+                onTap: _pickProfileImage,
+                child: CircleAvatar(
+                  radius: 60, // Tamaño ajustado para una foto de perfil más grande
+                  backgroundImage: _profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null,
+                  child: _profileImageUrl == null ? const Icon(Icons.add_a_photo, size: 50) : null,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-            UserProfileWidget(
-              nameController: _nameController,
-              descriptionController: TextEditingController(text: userRole != 'Usuario' ? _descriptionController.text : ''),
-              location: userRole != 'Usuario' ? _location : '',
-              onLocationChanged: (value) => setState(() => _location = value),
-              onSave: _saveProfile,
-              role: userRole,
-              email: _email,
-            ),
-            if (userRole != 'Usuario')
-              Column(
-                children: [
-                  if (_locationCoordinates != null)
-                    Text(
-                      'Ubicación: $_location',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  if (_businessImageUrls.isNotEmpty)
-                    BusinessImagesSection(
-                      imageUrls: _businessImageUrls,
-                      onAddImage: _pickBusinessImage,
-                      role: userRole,
-                    ),
-                ],
+            const SizedBox(height: 20),
+              UserProfileWidget(
+                nameController: _nameController,
+                descriptionController: TextEditingController(text: userRole != 'Usuario' ? _descriptionController.text : ''),
+                phoneController: _phoneController,
+                location: userRole != 'Usuario' ? _location : '',
+                onLocationChanged: (value) => setState(() => _location = value),
+                onSave: _saveProfile,
+                role: userRole,
+                email: _email,
               ),
-            if (_isLoading) CircularProgressIndicator(),
+              if (userRole == 'Comerciante' || userRole == 'Criador') 
+                Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: BusinessImagesSection(
+                    imageUrls: _businessImageUrls,
+                    onAddImage: _pickBusinessImage,
+                    role: userRole,
+                  ),
+                ),
+              if (_isLoading) CircularProgressIndicator(),
           ],
         ),
       ),
