@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../widgets/colors_utils.dart';
+import '../../utils/colors_utils.dart';
 
 class LegalInfoScreen extends StatelessWidget {
   @override

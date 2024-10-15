@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../widgets/colors_utils.dart';
+import '../../utils/colors_utils.dart';
 import '../home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {

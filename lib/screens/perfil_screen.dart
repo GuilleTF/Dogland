@@ -12,6 +12,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:dogland/services/profile_service.dart';
 import 'package:dogland/widgets/business_images_section.dart';
 import 'package:dogland/widgets/user_profile_widget.dart';
+import 'package:dogland/utils/profile_comparator.dart';
 
 class PerfilScreen extends StatefulWidget {
   final String role;
@@ -36,6 +37,14 @@ class _PerfilScreenState extends State<PerfilScreen> {
   final picker = ImagePicker();
   String userRole = '';
 
+ // Valores iniciales para saber si hubo cambios
+  late String initialName;
+  late String initialDescription;
+  late String initialPhone;
+  late LatLng? initialLocationCoordinates;
+  late String? initialProfileImageUrl;
+  late List<String> initialBusinessImageUrls;
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +64,14 @@ class _PerfilScreenState extends State<PerfilScreen> {
         userRole = userDataMap?['role'] ?? '';
         _profileImageUrl = userDataMap?['profileImage'];
         _businessImageUrls = List<String>.from(userDataMap?['businessImages'] ?? []);
+      
+        // Guardar valores iniciales
+        initialName = _nameController.text;
+        initialDescription = _descriptionController.text;
+        initialPhone = _phoneController.text;
+        initialLocationCoordinates = _locationCoordinates;
+        initialProfileImageUrl = _profileImageUrl;
+        initialBusinessImageUrls = List<String>.from(_businessImageUrls);
       });
 
       if (userDataMap?['location'] != null) {
@@ -87,6 +104,30 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Future<void> _saveProfile() async {
+    final comparator = ProfileComparator(
+      initialName: initialName,
+      initialDescription: initialDescription,
+      initialPhone: initialPhone,
+      initialLocationCoordinates: initialLocationCoordinates,
+      initialProfileImageUrl: initialProfileImageUrl,
+      initialBusinessImageUrls: initialBusinessImageUrls,
+    );
+
+    // Verifica si no hubo cambios
+    if (!comparator.hasChanges(
+      currentName: _nameController.text,
+      currentDescription: _descriptionController.text,
+      currentPhone: _phoneController.text,
+      currentLocationCoordinates: _locationCoordinates,
+      currentProfileImageUrl: _profileImageUrl,
+      currentBusinessImageUrls: _businessImageUrls,
+    )) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se han realizado cambios.')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       String? profileImageUrl;

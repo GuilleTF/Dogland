@@ -5,7 +5,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 import '../home_screen.dart';
-import '../../widgets/colors_utils.dart';
+import '../../utils/colors_utils.dart';
 import 'legal_info_screen.dart';
 
 class LoginScreen extends StatelessWidget {
