@@ -164,14 +164,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Perfil',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.purple,
-        centerTitle: true,
-      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
