@@ -161,6 +161,28 @@ class _PerfilScreenState extends State<PerfilScreen> {
     return result != null ? File(result.path) : file;
   }
 
+    Future<void> _deleteBusinessImage(String imageUrl) async {
+    setState(() => _isLoading = true);
+    try {
+      // Eliminar la imagen de Firebase Storage
+      await _profileService.deleteImage(imageUrl);
+
+      // Remover la URL de la lista local y actualizar Firestore
+      setState(() {
+        _businessImageUrls.remove(imageUrl);
+      });
+      await _profileService.updateProfileData({
+        'businessImages': _businessImageUrls,
+      });
+
+      print("Imagen eliminada");
+    } catch (e) {
+      print("Error al eliminar la imagen: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -185,6 +207,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     child: BusinessImagesSection(
                       imageUrls: _businessImageUrls,
                       onAddImage: _pickBusinessImage,
+                      onDeleteImage: _deleteBusinessImage,
                       role: userRole,
                     ),
                   ),

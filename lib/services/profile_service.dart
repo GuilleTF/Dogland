@@ -19,4 +19,14 @@ class ProfileService {
 
     await _firestore.collection('users').doc(user.uid).set(data, SetOptions(merge: true));
   }
+
+  Future<void> deleteImage(String imageUrl) async {
+    try {
+      final ref = _storage.refFromURL(imageUrl);
+      await ref.delete();
+    } catch (e) {
+      print("Error al eliminar la imagen: $e");
+    }
+  }
 }
+
