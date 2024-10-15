@@ -187,6 +187,15 @@ class _PerfilScreenState extends State<PerfilScreen> {
               ),
             ),
             const SizedBox(height: 20),
+            if (userRole == 'Comercio' || userRole == 'Criador')
+              Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: BusinessImagesSection(
+                      imageUrls: _businessImageUrls,
+                      onAddImage: _pickBusinessImage,
+                      role: userRole,
+                    ),
+                  ),
               UserProfileWidget(
                 nameController: _nameController,
                 descriptionController: TextEditingController(text: userRole != 'Usuario' ? _descriptionController.text : ''),
@@ -197,15 +206,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 role: userRole,
                 email: _email,
               ),
-              if (userRole == 'Comerciante' || userRole == 'Criador') 
-                Padding(
-                  padding: const EdgeInsets.only(top: 20.0),
-                  child: BusinessImagesSection(
-                    imageUrls: _businessImageUrls,
-                    onAddImage: _pickBusinessImage,
-                    role: userRole,
-                  ),
-                ),
+              
               if (_isLoading) CircularProgressIndicator(),
           ],
         ),
