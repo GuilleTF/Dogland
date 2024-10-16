@@ -51,28 +51,30 @@ class _PerfilScreenState extends State<PerfilScreen> {
     _loadProfileData();
   }
 
-  Future<void> _loadProfileData() async {
+Future<void> _loadProfileData() async {
     try {
       DocumentSnapshot userData = await _profileService.getUserData();
       final userDataMap = userData.data() as Map<String, dynamic>?;
 
       setState(() {
         _nameController.text = userDataMap?['username'] ?? '';
-        _descriptionController.text = userDataMap?['description'] ?? '';
+        _descriptionController.text = userDataMap?['description'] ?? ''; // Check this in logs
         _phoneController.text = userDataMap?['phoneNumber'] ?? '';
         _email = userDataMap?['email'] ?? '';
         userRole = userDataMap?['role'] ?? '';
         _profileImageUrl = userDataMap?['profileImage'];
         _businessImageUrls = List<String>.from(userDataMap?['businessImages'] ?? []);
       
-        // Guardar valores iniciales
+        // Initial values for comparison
         initialName = _nameController.text;
-        initialDescription = _descriptionController.text;
+        initialDescription = _descriptionController.text; // Track initial description
         initialPhone = _phoneController.text;
         initialLocationCoordinates = _locationCoordinates;
         initialProfileImageUrl = _profileImageUrl;
         initialBusinessImageUrls = List<String>.from(_businessImageUrls);
       });
+
+      print("Descripción cargada: ${_descriptionController.text}"); // Log loaded description
 
       if (userDataMap?['location'] != null) {
         GeoPoint geoPoint = userDataMap!['location'];
@@ -85,7 +87,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
     } catch (e) {
       print("Error al cargar los datos: $e");
     }
-  }
+}
 
   Future<String> _getAddressFromLatLng(LatLng coordinates) async {
     try {
@@ -102,7 +104,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
     }
     return 'Ubicación desconocida';
   }
-
+  
   Future<void> _saveProfile() async {
     final comparator = ProfileComparator(
       initialName: initialName,
@@ -113,7 +115,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       initialBusinessImageUrls: initialBusinessImageUrls,
     );
 
-    // Verifica si no hubo cambios
+    // Check for changes
     if (!comparator.hasChanges(
       currentName: _nameController.text,
       currentDescription: _descriptionController.text,
@@ -130,21 +132,29 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
     setState(() => _isLoading = true);
     try {
-      String? profileImageUrl;
+      String? profileImageUrl = _profileImageUrl;
       List<String> businessImageUrls = [];
 
-      if (_profileImageUrl != null) {
+      // Add image upload logic if profile image URL is valid and local
+      if (_profileImageUrl != null && File(_profileImageUrl!).existsSync()) {
         profileImageUrl = await _uploadImage(File(_profileImageUrl!), 'profile_images');
       }
 
       for (var imageUrl in _businessImageUrls) {
-        String uploadedImageUrl = await _uploadImage(File(imageUrl), 'business_images');
-        businessImageUrls.add(uploadedImageUrl);
+        if (File(imageUrl).existsSync()) {
+          String uploadedImageUrl = await _uploadImage(File(imageUrl), 'business_images');
+          businessImageUrls.add(uploadedImageUrl);
+        } else {
+          businessImageUrls.add(imageUrl);
+        }
       }
+
+      // Log before saving to check what is actually being sent
+      print("Descripción enviada: ${_descriptionController.text}");
 
       final data = {
         'username': _nameController.text,
-        'description': _descriptionController.text,
+        'description': _descriptionController.text, // Ensure description is included
         'phoneNumber': _phoneController.text,
         'location': _locationCoordinates != null
             ? GeoPoint(_locationCoordinates!.latitude, _locationCoordinates!.longitude)
@@ -165,20 +175,38 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Future<String> _uploadImage(File imageFile, String folder) async {
-    final ref = FirebaseStorage.instance
-        .ref()
-        .child(folder)
-        .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+    if (imageFile.path.startsWith('http')) {
+      // No intentes subir URLs de red
+      print("No se puede subir una URL: ${imageFile.path}");
+      return Future.error("El archivo no es un archivo local.");
+    }
+    if (!imageFile.existsSync()) {
+      print("El archivo no existe: ${imageFile.path}");
+      return Future.error("El archivo no existe.");
+    }
+    try {
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child(folder)
+          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
 
-    await ref.putFile(imageFile);
-    return await ref.getDownloadURL();
+      await ref.putFile(imageFile);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      print("Error al subir la imagen: $e");
+      return Future.error("Error al subir la imagen.");
+    }
   }
 
   Future<void> _pickProfileImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       final compressedImage = await _compressImage(File(pickedFile.path));
-      setState(() => _profileImageUrl = compressedImage.path);
+      if (compressedImage.existsSync()) {
+        setState(() => _profileImageUrl = compressedImage.path);
+      } else {
+        print("Error: La imagen comprimida no se guardó correctamente.");
+      }
     }
   }
 
@@ -186,7 +214,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       final compressedImage = await _compressImage(File(pickedFile.path));
-      setState(() => _businessImageUrls.add(compressedImage.path));
+      if (compressedImage.existsSync()) {
+        setState(() => _businessImageUrls.add(compressedImage.path));
+      } else {
+        print("Error: La imagen comprimida no se guardó correctamente.");
+      }
     }
   }
 
@@ -254,7 +286,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   ),
               UserProfileWidget(
                 nameController: _nameController,
-                descriptionController: TextEditingController(text: userRole != 'Usuario' ? _descriptionController.text : ''),
+                descriptionController: _descriptionController,
                 phoneController: _phoneController,
                 location: userRole != 'Usuario' ? _location : '',
                 onLocationChanged: (value) => setState(() => _location = value),
