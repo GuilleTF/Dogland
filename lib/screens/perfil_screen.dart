@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'dart:io';
@@ -30,14 +31,16 @@ class _PerfilScreenState extends State<PerfilScreen> {
   String _location = 'Ubicación desconocida';
   String _email = '';
   String? _profileImageUrl;
-  List<String> _businessImageUrls = [];
+  File? _profileImageFile;  // Nueva variable para manejar el archivo de perfil
+  List<File> _businessImages = [];
+  List<Uint8List> _businessImageBytes = [];
   LatLng? _locationCoordinates;
   bool _isLoading = false;
   final ProfileService _profileService = ProfileService();
   final picker = ImagePicker();
   String userRole = '';
 
- // Valores iniciales para saber si hubo cambios
+  // Valores iniciales para saber si hubo cambios
   late String initialName;
   late String initialDescription;
   late String initialPhone;
@@ -51,30 +54,33 @@ class _PerfilScreenState extends State<PerfilScreen> {
     _loadProfileData();
   }
 
-Future<void> _loadProfileData() async {
+  Future<void> _loadProfileData() async {
     try {
       DocumentSnapshot userData = await _profileService.getUserData();
       final userDataMap = userData.data() as Map<String, dynamic>?;
 
       setState(() {
         _nameController.text = userDataMap?['username'] ?? '';
-        _descriptionController.text = userDataMap?['description'] ?? ''; // Check this in logs
+        _descriptionController.text = userDataMap?['description'] ?? '';
         _phoneController.text = userDataMap?['phoneNumber'] ?? '';
         _email = userDataMap?['email'] ?? '';
         userRole = userDataMap?['role'] ?? '';
         _profileImageUrl = userDataMap?['profileImage'];
-        _businessImageUrls = List<String>.from(userDataMap?['businessImages'] ?? []);
-      
-        // Initial values for comparison
+        _businessImages = [];
+        _businessImageBytes = [];
+
+        // Cargar imágenes del negocio
+        if (userDataMap?['businessImages'] != null) {
+          _loadBusinessImages(List<String>.from(userDataMap!['businessImages']));
+        }
+
         initialName = _nameController.text;
-        initialDescription = _descriptionController.text; // Track initial description
+        initialDescription = _descriptionController.text;
         initialPhone = _phoneController.text;
         initialLocationCoordinates = _locationCoordinates;
         initialProfileImageUrl = _profileImageUrl;
-        initialBusinessImageUrls = List<String>.from(_businessImageUrls);
+        initialBusinessImageUrls = List<String>.from(userDataMap?['businessImages'] ?? []);
       });
-
-      print("Descripción cargada: ${_descriptionController.text}"); // Log loaded description
 
       if (userDataMap?['location'] != null) {
         GeoPoint geoPoint = userDataMap!['location'];
@@ -87,7 +93,34 @@ Future<void> _loadProfileData() async {
     } catch (e) {
       print("Error al cargar los datos: $e");
     }
-}
+  }
+
+  Future<void> _loadBusinessImages(List<String> imageUrls) async {
+    try {
+      for (String imageUrl in imageUrls) {
+        if (kIsWeb) {
+          final ref = FirebaseStorage.instance.refFromURL(imageUrl);
+          final data = await ref.getData();
+          if (data != null) {
+            setState(() {
+              _businessImageBytes.add(data);
+            });
+          }
+        } else {
+          final ref = FirebaseStorage.instance.refFromURL(imageUrl);
+          final dir = await getTemporaryDirectory();
+          final filePath = path.join(dir.absolute.path, '${DateTime.now().millisecondsSinceEpoch}.jpg');
+          final file = File(filePath);
+          await ref.writeToFile(file);
+          setState(() {
+            _businessImages.add(file);
+          });
+        }
+      }
+    } catch (e) {
+      print('Error al cargar las imágenes de negocio: $e');
+    }
+  }
 
   Future<String> _getAddressFromLatLng(LatLng coordinates) async {
     try {
@@ -104,7 +137,7 @@ Future<void> _loadProfileData() async {
     }
     return 'Ubicación desconocida';
   }
-  
+
   Future<void> _saveProfile() async {
     final comparator = ProfileComparator(
       initialName: initialName,
@@ -122,7 +155,7 @@ Future<void> _loadProfileData() async {
       currentPhone: _phoneController.text,
       currentLocationCoordinates: _locationCoordinates,
       currentProfileImageUrl: _profileImageUrl,
-      currentBusinessImageUrls: _businessImageUrls,
+      currentBusinessImageUrls: _businessImages.map((file) => file.path).toList(),
     )) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('No se han realizado cambios.')),
@@ -131,30 +164,24 @@ Future<void> _loadProfileData() async {
     }
 
     setState(() => _isLoading = true);
+
     try {
+      // Actualiza la imagen de perfil si hay cambios
       String? profileImageUrl = _profileImageUrl;
+      if (_profileImageFile != null) {
+        profileImageUrl = await _uploadImage(_profileImageFile!, 'profile_images');
+      }
+
+      // Subir las imágenes del negocio
       List<String> businessImageUrls = [];
-
-      // Add image upload logic if profile image URL is valid and local
-      if (_profileImageUrl != null && File(_profileImageUrl!).existsSync()) {
-        profileImageUrl = await _uploadImage(File(_profileImageUrl!), 'profile_images');
+      for (var file in _businessImages) {
+        String uploadedUrl = await _uploadImage(file, 'business_images');
+        businessImageUrls.add(uploadedUrl);
       }
-
-      for (var imageUrl in _businessImageUrls) {
-        if (File(imageUrl).existsSync()) {
-          String uploadedImageUrl = await _uploadImage(File(imageUrl), 'business_images');
-          businessImageUrls.add(uploadedImageUrl);
-        } else {
-          businessImageUrls.add(imageUrl);
-        }
-      }
-
-      // Log before saving to check what is actually being sent
-      print("Descripción enviada: ${_descriptionController.text}");
 
       final data = {
         'username': _nameController.text,
-        'description': _descriptionController.text, // Ensure description is included
+        'description': _descriptionController.text,
         'phoneNumber': _phoneController.text,
         'location': _locationCoordinates != null
             ? GeoPoint(_locationCoordinates!.latitude, _locationCoordinates!.longitude)
@@ -166,7 +193,9 @@ Future<void> _loadProfileData() async {
       };
 
       await _profileService.updateProfileData(data);
-      print("Perfil actualizado");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Perfil actualizado con éxito.')),
+      );
     } catch (e) {
       print("Error al guardar el perfil: $e");
     } finally {
@@ -175,84 +204,49 @@ Future<void> _loadProfileData() async {
   }
 
   Future<String> _uploadImage(File imageFile, String folder) async {
-    if (imageFile.path.startsWith('http')) {
-      // No intentes subir URLs de red
-      print("No se puede subir una URL: ${imageFile.path}");
-      return Future.error("El archivo no es un archivo local.");
-    }
     if (!imageFile.existsSync()) {
-      print("El archivo no existe: ${imageFile.path}");
       return Future.error("El archivo no existe.");
     }
+
     try {
       final ref = FirebaseStorage.instance
           .ref()
           .child(folder)
           .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
-
       await ref.putFile(imageFile);
       return await ref.getDownloadURL();
     } catch (e) {
       print("Error al subir la imagen: $e");
-      return Future.error("Error al subir la imagen.");
+      throw e;
     }
   }
 
+  // Método para elegir la imagen de perfil
   Future<void> _pickProfileImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      final compressedImage = await _compressImage(File(pickedFile.path));
-      if (compressedImage.existsSync()) {
-        setState(() => _profileImageUrl = compressedImage.path);
-      } else {
-        print("Error: La imagen comprimida no se guardó correctamente.");
-      }
+      setState(() {
+        _profileImageFile = File(pickedFile.path);
+        _profileImageUrl = null; // Se anula la URL para refrescar la imagen localmente
+      });
     }
   }
 
+  // Método para elegir las imágenes de negocio
   Future<void> _pickBusinessImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      final compressedImage = await _compressImage(File(pickedFile.path));
-      if (compressedImage.existsSync()) {
-        setState(() => _businessImageUrls.add(compressedImage.path));
+      if (kIsWeb) {
+        final bytes = await pickedFile.readAsBytes();
+        setState(() {
+          _businessImageBytes.add(bytes);
+        });
       } else {
-        print("Error: La imagen comprimida no se guardó correctamente.");
+        final file = File(pickedFile.path);
+        setState(() {
+          _businessImages.add(file);
+        });
       }
-    }
-  }
-
-  Future<File> _compressImage(File file) async {
-    final dir = await getTemporaryDirectory();
-    final targetPath = path.join(dir.absolute.path, '${DateTime.now().millisecondsSinceEpoch}.jpg');
-    final result = await FlutterImageCompress.compressAndGetFile(
-      file.absolute.path,
-      targetPath,
-      quality: 85,
-    );
-
-    return result != null ? File(result.path) : file;
-  }
-
-    Future<void> _deleteBusinessImage(String imageUrl) async {
-    setState(() => _isLoading = true);
-    try {
-      // Eliminar la imagen de Firebase Storage
-      await _profileService.deleteImage(imageUrl);
-
-      // Remover la URL de la lista local y actualizar Firestore
-      setState(() {
-        _businessImageUrls.remove(imageUrl);
-      });
-      await _profileService.updateProfileData({
-        'businessImages': _businessImageUrls,
-      });
-
-      print("Imagen eliminada");
-    } catch (e) {
-      print("Error al eliminar la imagen: $e");
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
 
@@ -263,39 +257,52 @@ Future<void> _loadProfileData() async {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 20), // Ajusta el valor del margen superior
+              padding: const EdgeInsets.only(top: 20),
               child: GestureDetector(
                 onTap: _pickProfileImage,
                 child: CircleAvatar(
-                  radius: 60, // Tamaño ajustado para una foto de perfil más grande
-                  backgroundImage: _profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null,
-                  child: _profileImageUrl == null ? const Icon(Icons.add_a_photo, size: 50) : null,
+                  radius: 60,
+                  backgroundImage: _profileImageFile != null
+                      ? FileImage(_profileImageFile!)
+                      : (_profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null),
+                  child: _profileImageFile == null && _profileImageUrl == null
+                      ? const Icon(Icons.add_a_photo, size: 50)
+                      : null,
                 ),
               ),
             ),
             const SizedBox(height: 20),
             if (userRole == 'Comercio' || userRole == 'Criador')
-              Padding(
-                    padding: const EdgeInsets.only(top: 20.0),
-                    child: BusinessImagesSection(
-                      imageUrls: _businessImageUrls,
-                      onAddImage: _pickBusinessImage,
-                      onDeleteImage: _deleteBusinessImage,
-                      role: userRole,
-                    ),
-                  ),
-              UserProfileWidget(
-                nameController: _nameController,
-                descriptionController: _descriptionController,
-                phoneController: _phoneController,
-                location: userRole != 'Usuario' ? _location : '',
-                onLocationChanged: (value) => setState(() => _location = value),
-                onSave: _saveProfile,
+              BusinessImagesSection(
+                mobileImages: _businessImages,
+                webImages: _businessImageBytes,
+                onAddImage: _pickBusinessImage,
+                onDeleteImage: (index) {
+                  setState(() {
+                    if (kIsWeb) {
+                      _businessImageBytes.removeAt(index);
+                    } else {
+                      _businessImages.removeAt(index);
+                    }
+                  });
+                },
                 role: userRole,
-                email: _email,
               ),
-              
-              if (_isLoading) CircularProgressIndicator(),
+            UserProfileWidget(
+              nameController: _nameController,
+              descriptionController: _descriptionController,
+              phoneController: _phoneController,
+              location: _location,
+              onLocationChanged: (newLocation) {
+                setState(() {
+                  _location = newLocation;
+                });
+              },
+              onSave: _saveProfile,
+              role: userRole,
+              email: _email,
+            ),
+            if (_isLoading) CircularProgressIndicator(),
           ],
         ),
       ),
