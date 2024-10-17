@@ -8,6 +8,7 @@ import 'package:dogland/widgets/comercios_stack.dart';
 import 'package:dogland/screens/perfil_screen.dart';
 import 'package:dogland/screens/perros/razas_screen.dart';
 import 'package:dogland/widgets/bottom_navbar.dart';
+import 'package:dogland/screens/login/login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -66,7 +67,11 @@ class _HomeScreenState extends State<HomeScreen> {
         title: _getTitle(),
         onLogout: () {
           FirebaseAuth.instance.signOut().then((value) {
-            Navigator.pushReplacementNamed(context, '/login');
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => LoginScreen()),
+              (route) => false,
+            );
           });
         },
         onBackPressed: _comerciosIndex == 1 ? _goBackToComercios : _goBackToInicio,
