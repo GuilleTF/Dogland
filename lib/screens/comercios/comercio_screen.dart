@@ -21,7 +21,7 @@ class ComercioScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String comercioUrl = 'https://tuapp.com/comercio/${nombre.replaceAll(' ', '_')}';
+    final String comercioUrl = 'https://dogland.com/comercio/${nombre.replaceAll(' ', '_')}';
 
     return Scaffold(
       body: SingleChildScrollView(

@@ -171,58 +171,81 @@ class _PerfilScreenState extends State<PerfilScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 20),
-              child: GestureDetector(
-                onTap: _pickProfileImage,
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundImage: _profileImageFile != null
-                      ? FileImage(_profileImageFile!)
-                      : (_profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null),
-                  child: _profileImageFile == null && _profileImageUrl == null
-                      ? const Icon(Icons.add_a_photo, size: 50)
-                      : null,
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.3),
+                spreadRadius: 5,
+                blurRadius: 7,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                // Imagen de perfil
+                GestureDetector(
+                  onTap: _pickProfileImage,
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundImage: _profileImageFile != null
+                        ? FileImage(_profileImageFile!)
+                        : (_profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null),
+                    child: _profileImageFile == null && _profileImageUrl == null
+                        ? const Icon(Icons.add_a_photo, size: 50)
+                        : null,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 20),
+
+                // Sección de imágenes del negocio
+                if (userRole == 'Comercio' || userRole == 'Criador')
+                  BusinessImagesSection(
+                    mobileImages: _businessImages,
+                    webImages: _businessImageBytes,
+                    onAddImage: _pickBusinessImage,
+                    onDeleteImage: (index) {
+                      setState(() {
+                        _businessImages.removeAt(index);
+                      });
+                    },
+                    role: userRole,
+                  ),
+                const SizedBox(height: 20),
+
+                // Campos de usuario
+                UserProfileWidget(
+                  nameController: _nameController,
+                  descriptionController: _descriptionController,
+                  phoneController: _phoneController,
+                  location: _location,
+                  onLocationChanged: (newLocation) {
+                    setState(() {
+                      _location = newLocation;
+                    });
+                  },
+                  onSave: _saveProfile,
+                  role: userRole,
+                  email: _email,
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            if (userRole == 'Comercio' || userRole == 'Criador')
-              BusinessImagesSection(
-                mobileImages: _businessImages,
-                webImages: _businessImageBytes,
-                onAddImage: _pickBusinessImage,
-                onDeleteImage: (index) {
-                  setState(() {
-                    _businessImages.removeAt(index);
-                  });
-                },
-                role: userRole,
-              ),
-            UserProfileWidget(
-              nameController: _nameController,
-              descriptionController: _descriptionController,
-              phoneController: _phoneController,
-              location: _location,
-              onLocationChanged: (newLocation) {
-                setState(() {
-                  _location = newLocation;
-                });
-              },
-              onSave: _saveProfile,
-              role: userRole,
-              email: _email,
-            ),
-            if (_isLoading) CircularProgressIndicator(),
-          ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 }
