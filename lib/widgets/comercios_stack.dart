@@ -37,6 +37,7 @@ class ComerciosStack extends StatelessWidget {
                     selectedComercioData!['location'].longitude,
                   )
                 : LatLng(0, 0),
+            perfilImagenUrl: selectedComercioData!['profileImage'] ?? '', // Añade esta línea
           ),
       ],
     );
