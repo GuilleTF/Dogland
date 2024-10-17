@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class UserProfileWidget extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController descriptionController;
   final TextEditingController phoneController;
-  final String location;
-  final Function(String) onLocationChanged;
+  final TextEditingController locationController;
+  final FocusNode locationFocusNode;
+  final Function(LatLng) onLocationSelected;
   final Function() onSave;
   final String role;
   final String email;
@@ -14,8 +17,9 @@ class UserProfileWidget extends StatelessWidget {
     required this.nameController,
     required this.descriptionController,
     required this.phoneController,
-    required this.location,
-    required this.onLocationChanged,
+    required this.locationController,
+    required this.locationFocusNode,
+    required this.onLocationSelected,
     required this.onSave,
     required this.role,
     required this.email,
@@ -25,7 +29,6 @@ class UserProfileWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Nombre de Usuario - siempre visible
         TextField(
           controller: nameController,
           decoration: const InputDecoration(
@@ -34,10 +37,8 @@ class UserProfileWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        
+
         if (role != 'Usuario') ...[
-        
-          // Descripción - visible solo si el rol no es "Usuario"
           TextField(
             controller: descriptionController,
             decoration: const InputDecoration(
@@ -47,7 +48,6 @@ class UserProfileWidget extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // Teléfono - visible solo si el rol no es "Usuario"
           TextField(
             controller: phoneController,
             decoration: const InputDecoration(
@@ -56,21 +56,35 @@ class UserProfileWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-        
-          // Ubicación - visible solo si el rol no es "Usuario"
-          TextField(
-            controller: TextEditingController(text: location),
-            decoration: const InputDecoration(
-              labelText: 'Ubicación',
-              labelStyle: TextStyle(fontWeight: FontWeight.bold),
+
+          GooglePlaceAutoCompleteTextField(
+            textEditingController: locationController,
+            googleAPIKey: "AIzaSyCmf3PNr3CTGTwcGh5V5kFh1Fc4Tz8fjng",
+            inputDecoration: InputDecoration(
+              hintText: 'Buscar ubicación',
+              filled: true,
+              fillColor: Colors.white,
             ),
-            onChanged: onLocationChanged,
+            focusNode: locationFocusNode,
+            debounceTime: 800,
+            isLatLngRequired: true,
+            getPlaceDetailWithLatLng: (prediction) {
+              onLocationSelected(LatLng(
+                double.tryParse(prediction.lat ?? '0.0') ?? 0.0,
+                double.tryParse(prediction.lng ?? '0.0') ?? 0.0,
+              ));
+            },
+            itemClick: (prediction) {
+              locationController.text = prediction.description ?? '';
+              onLocationSelected(LatLng(
+                double.tryParse(prediction.lat ?? '0.0') ?? 0.0,
+                double.tryParse(prediction.lng ?? '0.0') ?? 0.0,
+              ));
+            },
           ),
-        
-        const SizedBox(height: 10),
+          const SizedBox(height: 10),
         ],
 
-        // Correo Electrónico - siempre visible, pero solo lectura
         TextField(
           controller: TextEditingController(text: email),
           decoration: const InputDecoration(
@@ -79,30 +93,8 @@ class UserProfileWidget extends StatelessWidget {
           ),
           readOnly: true,
         ),
-        
-        const SizedBox(height: 10),
-
-        // Rol - siempre visible
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Rol:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                role,
-                style: const TextStyle(fontSize: 16),
-              ),
-            ],
-          ),
-        ),
-
         const SizedBox(height: 20),
         
-        // Botón de Guardar Perfil - siempre visible
         ElevatedButton(
           onPressed: onSave,
           child: const Text('Guardar Perfil'),

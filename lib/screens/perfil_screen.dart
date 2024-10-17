@@ -30,6 +30,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+  final FocusNode _locationFocusNode = FocusNode();
 
   String _location = 'Ubicación desconocida';
   String _email = '';
@@ -54,8 +56,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
     super.initState();
     _loadProfileData();
   }
-
-  Future<void> _loadProfileData() async {
+Future<void> _loadProfileData() async {
   setState(() => _isLoading = true);
   try {
     DocumentSnapshot userData = await _profileService.getUserData();
@@ -72,16 +73,22 @@ class _PerfilScreenState extends State<PerfilScreen> {
       if (userDataMap['location'] != null) {
         GeoPoint geoPoint = userDataMap['location'];
         _locationCoordinates = LatLng(geoPoint.latitude, geoPoint.longitude);
+        _locationController.text = await _locationService.getAddressFromLatLng(_locationCoordinates!);
+      } else {
+        _locationController.text = _location;
       }
 
-      if (_locationCoordinates != null) {
-        _location = await _locationService.getAddressFromLatLng(_locationCoordinates!);
-      }
-
-      // Esperar a que se carguen todas las imágenes
       if (userDataMap['businessImages'] != null) {
         _businessImages = await _imageService.loadImages(List<String>.from(userDataMap['businessImages']));
       }
+
+      // Inicializa las variables para comparar los cambios
+      initialName = _nameController.text;
+      initialDescription = _descriptionController.text;
+      initialPhone = _phoneController.text;
+      initialLocationCoordinates = _locationCoordinates;
+      initialProfileImageUrl = _profileImageUrl;
+      initialBusinessImageUrls = List<String>.from(userDataMap['businessImages'] ?? []);
     }
   } catch (e) {
     print("Error al cargar los datos del perfil: $e");
@@ -89,6 +96,15 @@ class _PerfilScreenState extends State<PerfilScreen> {
     setState(() => _isLoading = false);
   }
 }
+
+
+ @override
+  void dispose() {
+    _locationController.dispose();
+    _locationFocusNode.dispose();
+    super.dispose();
+  }
+
 
   Future<void> _saveProfile() async {
     final comparator = ProfileComparator(
@@ -229,10 +245,11 @@ Widget build(BuildContext context) {
                   nameController: _nameController,
                   descriptionController: _descriptionController,
                   phoneController: _phoneController,
-                  location: _location,
-                  onLocationChanged: (newLocation) {
+                  locationController: _locationController,
+                  locationFocusNode: _locationFocusNode,
+                  onLocationSelected: (coordinates) {
                     setState(() {
-                      _location = newLocation;
+                      _locationCoordinates = coordinates;
                     });
                   },
                   onSave: _saveProfile,
