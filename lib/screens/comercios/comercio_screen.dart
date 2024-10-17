@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:flutter/services.dart';
 
 class ComercioScreen extends StatelessWidget {
   final String nombre;
@@ -20,6 +22,8 @@ class ComercioScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String comercioUrl = 'https://tuapp.com/comercio/${nombre.replaceAll(' ', '_')}';
+
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -70,7 +74,9 @@ class ComercioScreen extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.share),
                   onPressed: () {
-                    // Lógica para compartir
+                    // Cierra el teclado antes de abrir el BottomSheet
+                    FocusScope.of(context).unfocus();
+                    _shareComercio(context, comercioUrl);
                   },
                 ),
                 IconButton(
@@ -137,6 +143,42 @@ class ComercioScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _shareComercio(BuildContext context, String comercioUrl) {
+    // Diálogo de opciones para compartir
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            ListTile(
+              leading: Icon(Icons.share),
+              title: Text('Compartir'),
+              onTap: () {
+                // Verifica que el texto no esté vacío antes de compartir
+                if (comercioUrl.isNotEmpty) {
+                  Share.share('Visita el comercio $nombre en $comercioUrl');
+                }
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.link),
+              title: Text('Copiar enlace'),
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: comercioUrl));
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Enlace copiado al portapapeles')),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
