@@ -1,10 +1,9 @@
-// comercio_card.dart
 import 'package:flutter/material.dart';
 
 class ComercioCard extends StatelessWidget {
   final String titulo;
   final String descripcion;
-  final String? imagen;
+  final String? imagen; // Acepta null para manejar la imagen
   final VoidCallback onTap;
 
   const ComercioCard({
@@ -30,15 +29,15 @@ class ComercioCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Contenedor de imagen o ícono
+              // Imagen o ícono predeterminado
               Container(
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12.0),
-                  color: Colors.grey[200], // Color de fondo para el ícono
+                  color: Colors.grey[200],
                 ),
-                child: imagen != null && imagen!.isNotEmpty && imagen!.startsWith('http')
+                child: imagen != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(12.0),
                         child: Image.network(
@@ -50,8 +49,8 @@ class ComercioCard extends StatelessWidget {
                       )
                     : Icon(
                         Icons.store,
-                        size: 50, // Tamaño del ícono
-                        color: Colors.grey[600], // Color del ícono
+                        size: 50,
+                        color: Colors.grey[600],
                       ),
               ),
               const SizedBox(width: 15),

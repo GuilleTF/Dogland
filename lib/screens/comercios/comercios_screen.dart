@@ -1,5 +1,3 @@
-// comercios_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dogland/widgets/comercio_card.dart';
@@ -59,12 +57,6 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
     });
   }
 
-  void _applyLocationFilter() {
-    // Lógica para filtrar por ubicación, por ejemplo, mostrando un cuadro de diálogo
-    // o usando la ubicación actual del usuario.
-    // Esta función debería actualizar _filteredComercios en función de la ubicación.
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,7 +65,9 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
           CustomSearchBar(
             searchController: _searchController,
             onSearchChanged: (query) => _filterComercios(),
-            onLocationFilterPressed: _applyLocationFilter,
+            onLocationFilterPressed: () {
+              // Implementación de filtro de ubicación
+            },
           ),
           Expanded(
             child: ListView.builder(
@@ -81,10 +75,16 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
               itemBuilder: (context, index) {
                 var comercioData = _filteredComercios[index].data() as Map<String, dynamic>;
 
+                // Determinar la imagen que se mostrará en la tarjeta (solo de businessImages)
+                String? imagen = comercioData['businessImages'] != null &&
+                        comercioData['businessImages'].isNotEmpty
+                    ? comercioData['businessImages'][0] // Primera imagen de businessImages
+                    : null; // Ninguna imagen de perfil, solo el ícono si no hay imágenes de negocio
+
                 return ComercioCard(
                   titulo: comercioData['username'] ?? 'Nombre no disponible',
                   descripcion: comercioData['description'] ?? 'Sin descripción',
-                  imagen: comercioData['profileImage'] ?? null,
+                  imagen: imagen, // Asigna la imagen determinada
                   onTap: () => widget.onComercioSelected(comercioData),
                 );
               },
