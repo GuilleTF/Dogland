@@ -9,6 +9,7 @@ import 'package:dogland/screens/perfil_screen.dart';
 import 'package:dogland/screens/perros/razas_screen.dart';
 import 'package:dogland/widgets/bottom_navbar.dart';
 import 'package:dogland/screens/login/login_screen.dart';
+import 'package:dogland/screens/perros/mis_perros_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -18,11 +19,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   int _comerciosIndex = 0;
+  int? _misPerrosIndex;
   Map<String, dynamic>? _selectedComercioData;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      _misPerrosIndex = null;
     });
   }
 
@@ -46,7 +49,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _goToMisPerros() {
+    setState(() {
+      _misPerrosIndex = 1;
+    });
+  }
+
   String _getTitle() {
+    if (_misPerrosIndex != null) {
+      return 'Mis Perros';
+    }
     if (_selectedIndex == 4 && _comerciosIndex == 1 && _selectedComercioData != null) {
       return _selectedComercioData!['username'] ?? 'Comercio';
     }
@@ -74,11 +86,15 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           });
         },
-        onBackPressed: _comerciosIndex == 1 ? _goBackToComercios : _goBackToInicio,
-        showBackButton: _selectedIndex == 4,
+        onBackPressed: _misPerrosIndex == 1
+            ? () => setState(() => _misPerrosIndex = null)
+            : _comerciosIndex == 1
+                ? _goBackToComercios
+                : _goBackToInicio,
+        showBackButton: _misPerrosIndex == 1 || _comerciosIndex == 1 || _selectedIndex == 4,
       ),
       body: IndexedStack(
-        index: _selectedIndex,
+        index: _misPerrosIndex != null ? 6 : _selectedIndex,
         children: [
           HomeContent(
             onComerciosTapped: () => _onItemTapped(4),
@@ -86,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Container(color: Colors.red), // Placeholder for Favoritos
           Container(color: Colors.blue), // Placeholder for Mensajes
-          PerfilScreen(role: 'comerciante'),
+          PerfilScreen(onMisPerrosTapped: _goToMisPerros),
           ComerciosStack(
             comerciosIndex: _comerciosIndex,
             selectedComercioData: _selectedComercioData,
@@ -94,6 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onBackPressed: _goBackToComercios,
           ),
           RazasScreen(),
+          MisPerrosScreen(),
         ],
       ),
       bottomNavigationBar: CustomBottomNavBar(

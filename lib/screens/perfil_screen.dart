@@ -14,9 +14,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:io';
 
 class PerfilScreen extends StatefulWidget {
-  final String role;
+  final VoidCallback onMisPerrosTapped;
 
-  PerfilScreen({required this.role});
+  PerfilScreen({required this.onMisPerrosTapped});
 
   @override
   _PerfilScreenState createState() => _PerfilScreenState();
@@ -238,6 +238,14 @@ Widget build(BuildContext context) {
                     },
                     role: userRole,
                   ),
+                const SizedBox(height: 20),
+                
+                if (userRole == 'Criador')
+                    ElevatedButton(
+                      onPressed: widget.onMisPerrosTapped,
+                      child: Text('MIS PERROS'),
+                    ),
+                  
                 const SizedBox(height: 20),
 
                 // Campos de usuario

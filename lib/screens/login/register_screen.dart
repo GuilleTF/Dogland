@@ -104,8 +104,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
 
       // Navega a HomeScreen
-      Navigator.of(context).pushReplacement(
+      Navigator.pushAndRemoveUntil(
+        context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
+        (route) => false, // Esto elimina la pantalla de registro y cualquier otra pantalla previa
       );
     } on FirebaseAuthException catch (e) {
       _showError("Error al registrar el usuario: ${e.message}");
