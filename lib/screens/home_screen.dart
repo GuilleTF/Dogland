@@ -1,10 +1,15 @@
+// home_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../widgets/bottom_navbar.dart';
-import 'login/login_screen.dart';
-import 'comercios/comercios_screen.dart';
-import 'perros/razas_screen.dart';
-import 'perfil_screen.dart';
+import 'package:dogland/widgets/home_app_bar.dart';
+import 'package:dogland/widgets/home_content.dart';
+import 'package:dogland/widgets/comercios_stack.dart';
+import 'package:dogland/screens/perfil_screen.dart';
+import 'package:dogland/screens/perros/razas_screen.dart';
+import 'package:dogland/widgets/bottom_navbar.dart';
+import 'package:dogland/screens/login/login_screen.dart';
+import 'package:dogland/screens/perros/mis_perros_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -13,178 +18,103 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  final String userRole = 'comerciante';
-  
-  List<Widget> _pages = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _pages = [
-      _buildHomeContent(), // Pantalla de inicio con botones dinámicos
-      Container(color: Colors.red), // Favoritos (Placeholder)
-      Container(color: Colors.blue), // Mensajes (Placeholder)
-      PerfilScreen(role: userRole), // Perfil (Placeholder)
-      ComerciosScreen(), // Pantalla de Comercios
-      RazasScreen(), // Pantalla de Razas de Perros
-    ];
-  }
+  int _comerciosIndex = 0;
+  int? _misPerrosIndex;
+  Map<String, dynamic>? _selectedComercioData;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      _misPerrosIndex = null;
+    });
+  }
+
+  void _selectComercio(Map<String, dynamic> comercioData) {
+    setState(() {
+      _selectedComercioData = comercioData;
+      _comerciosIndex = 1;
+    });
+  }
+
+  void _goBackToComercios() {
+    setState(() {
+      _comerciosIndex = 0;
+      _selectedComercioData = null;
+    });
+  }
+
+  void _goBackToInicio() {
+    setState(() {
+      _selectedIndex = 0;
+    });
+  }
+
+  void _goToMisPerros() {
+    setState(() {
+      _misPerrosIndex = 1;
     });
   }
 
   String _getTitle() {
-    switch (_selectedIndex) {
-      case 1:
-        return 'Favoritos';
-      case 2:
-        return 'Mensajes';
-      case 3:
-        return 'Perfil';
-      case 4:
-        return 'Comercios';
-      case 5:
-        return 'Razas de Perros';
-      default:
-        return 'Inicio';
+    if (_misPerrosIndex != null) {
+      return 'Mis Perros';
     }
-  }
-
-  Widget _buildHomeContent() {
-    return Column(
-      children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedIndex = 4; // Navegar a Comercios
-              });
-            },
-            child: Container(
-              margin: EdgeInsets.all(10.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 5,
-                    blurRadius: 7,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.store,
-                      size: 100,
-                      color: Colors.black,
-                    ),
-                    Text(
-                      'Comercios',
-                      style: TextStyle(
-                        fontSize: 24,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedIndex = 5; // Navegar a Razas de Perros
-              });
-            },
-            child: Container(
-              margin: EdgeInsets.all(10.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 5,
-                    blurRadius: 7,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.pets,
-                      size: 100,
-                      color: Colors.black,
-                    ),
-                    Text(
-                      'Perros',
-                      style: TextStyle(
-                        fontSize: 24,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+    if (_selectedIndex == 4 && _comerciosIndex == 1 && _selectedComercioData != null) {
+      return _selectedComercioData!['username'] ?? 'Comercio';
+    }
+    switch (_selectedIndex) {
+      case 1: return 'Favoritos';
+      case 2: return 'Mensajes';
+      case 3: return 'Perfil';
+      case 4: return 'Comercios';
+      case 5: return 'Razas de Perros';
+      default: return 'Inicio';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.purple,
-        title: Text(
-          _getTitle(),
-          style: 
-            TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        leading: (_selectedIndex == 4 || _selectedIndex == 5)
-            ? IconButton(
-                icon: Icon(Icons.arrow_back, color: Colors.white,),
-                onPressed: () => _onItemTapped(0), // Regresar a inicio
-              )
-            : null,
-        actions: [
-        if (_selectedIndex == 3) // Mostrar en Inicio y Perfil
-          IconButton(
-            icon: Icon(Icons.logout, color: Colors.white),
-            onPressed: () {
-              FirebaseAuth.instance.signOut().then((value) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                  (route) => false,
-                );
-              });
-            },
-          ),
-        ],
+      appBar: HomeAppBar(
+        title: _getTitle(),
+        onLogout: () {
+          FirebaseAuth.instance.signOut().then((value) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => LoginScreen()),
+              (route) => false,
+            );
+          });
+        },
+        onBackPressed: _misPerrosIndex == 1
+            ? () => setState(() => _misPerrosIndex = null)
+            : _comerciosIndex == 1
+                ? _goBackToComercios
+                : _goBackToInicio,
+        showBackButton: _misPerrosIndex == 1 || _comerciosIndex == 1 || _selectedIndex == 4,
       ),
       body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
+        index: _misPerrosIndex != null ? 6 : _selectedIndex,
+        children: [
+          HomeContent(
+            onComerciosTapped: () => _onItemTapped(4),
+            onPerrosTapped: () => _onItemTapped(5),
+          ),
+          Container(color: Colors.red), // Placeholder for Favoritos
+          Container(color: Colors.blue), // Placeholder for Mensajes
+          PerfilScreen(onMisPerrosTapped: _goToMisPerros),
+          ComerciosStack(
+            comerciosIndex: _comerciosIndex,
+            selectedComercioData: _selectedComercioData,
+            onComercioSelected: _selectComercio,
+            onBackPressed: _goBackToComercios,
+          ),
+          RazasScreen(),
+          MisPerrosScreen(),
+        ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _selectedIndex <= 3 ? _selectedIndex : 0,
+        currentIndex: _selectedIndex < 4 ? _selectedIndex : 0,
         onTap: _onItemTapped,
       ),
     );
