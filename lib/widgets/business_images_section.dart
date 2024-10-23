@@ -44,40 +44,69 @@ class BusinessImagesSection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             children: [
               ...List.generate(
-                webImages.isNotEmpty ? webImages.length : mobileImages.length,
-                (index) => Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: imageSize,
-                        height: imageSize,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12.0),
-                          color: Colors.grey[200],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12.0),
-                          child:  webImages.isNotEmpty
-                              ? Image.memory(webImages[index], fit: BoxFit.cover)
-                              : Image.file(mobileImages[index], fit: BoxFit.cover),
-                        ),
-                      ),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.delete,
-                            color: Colors.red,
-                            size: imageSize * 0.25,
+                mobileImages.length + webImages.length,  // Mezcla ambas listas
+                (index) {
+                  if (index < mobileImages.length) {
+                    // Mostrar imágenes locales
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: imageSize,
+                            height: imageSize,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12.0),
+                              color: Colors.grey[200],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12.0),
+                              child: Image.file(mobileImages[index], fit: BoxFit.cover),
+                            ),
                           ),
-                          onPressed: () => onDeleteImage(index),
-                        ),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red, size: imageSize * 0.25),
+                              onPressed: () => onDeleteImage(index),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    );
+                  } else {
+                    // Mostrar imágenes descargadas desde Firebase
+                    final webIndex = index - mobileImages.length;
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: imageSize,
+                            height: imageSize,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12.0),
+                              color: Colors.grey[200],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12.0),
+                              child: Image.memory(webImages[webIndex], fit: BoxFit.cover),
+                            ),
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red, size: imageSize * 0.25),
+                              onPressed: () => onDeleteImage(index),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                },
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
