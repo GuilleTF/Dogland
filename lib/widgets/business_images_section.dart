@@ -27,6 +27,9 @@ class BusinessImagesSection extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final imageSize = screenWidth * 0.3;
 
+    // Verifica si las imágenes están presentes
+    print('Mostrando ${mobileImages.length} imágenes locales y ${webImages.length} imágenes descargadas.');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -41,7 +44,7 @@ class BusinessImagesSection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             children: [
               ...List.generate(
-                kIsWeb ? webImages.length : mobileImages.length,
+                webImages.isNotEmpty ? webImages.length : mobileImages.length,
                 (index) => Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Stack(
@@ -55,7 +58,7 @@ class BusinessImagesSection extends StatelessWidget {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12.0),
-                          child: kIsWeb
+                          child:  webImages.isNotEmpty
                               ? Image.memory(webImages[index], fit: BoxFit.cover)
                               : Image.file(mobileImages[index], fit: BoxFit.cover),
                         ),

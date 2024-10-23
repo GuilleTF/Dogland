@@ -1,9 +1,10 @@
 import 'dart:io';
+import 'dart:typed_data';  
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dogland/widgets/business_images_section.dart';
-import 'package:dogland/services/image_service.dart';  // Servicio para cargar imágenes
+import 'package:dogland/services/image_service.dart';  
 
 class PerroFormScreen extends StatefulWidget {
   final Map<String, dynamic>? perro;
@@ -21,18 +22,46 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
   String _genero = 'Macho';
   double _precio = 0.0;
   String _descripcion = '';
-  List<File> _perroImages = [];
-  final ImageService _imageService = ImageService();  // Servicio para cargar imágenes
+  List<File> _perroImages = [];  // Para imágenes locales
+  List<Uint8List> _perroImageBytes = [];  // Para imágenes descargadas
+  List<String> _perroImageUrls = [];  // Para URLs de imágenes guardadas
+  final ImageService _imageService = ImageService();
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.perro != null) {
+      // Inicializar los datos del perro si estamos editando
       _raza = widget.perro!['raza'];
       _genero = widget.perro!['genero'];
       _precio = widget.perro!['precio'];
       _descripcion = widget.perro!['descripcion'];
-      // Aquí deberíamos inicializar las imágenes si el perro ya tiene fotos
+
+      // Cargar URLs de imágenes guardadas en Firebase
+      if (widget.perro!['images'] != null) {
+        _perroImageUrls = List<String>.from(widget.perro!['images']);
+        _loadPerroImages();  // Cargar las imágenes desde Firebase
+      }
+    }
+  }
+
+  // Método para cargar las imágenes desde Firebase
+  Future<void> _loadPerroImages() async {
+    setState(() {
+      _isLoading = true; // Indicar que se está cargando
+    });
+
+    try {
+      print('Cargando imágenes: $_perroImageUrls');
+      _perroImageBytes = await _imageService.loadImagesFromUrls(_perroImageUrls);
+      setState(() {});
+    } catch (e) {
+      print("Error al cargar las imágenes: $e");
+    } finally {
+      setState(() {
+        _isLoading = false; // Carga completada
+      });
     }
   }
 
@@ -40,42 +69,41 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      // Aquí puedes subir las imágenes seleccionadas a Firestore antes de guardar el perro
       List<String> uploadedImageUrls = [];
       try {
-        // Aquí puedes subir las imágenes seleccionadas a Firebase antes de guardar el perro
+        // Subir imágenes locales seleccionadas
         for (var image in _perroImages) {
           String imageUrl = await _imageService.uploadImage(image, 'perros_images');
           uploadedImageUrls.add(imageUrl);
         }
-        
+
+        // Mantener las imágenes ya almacenadas
+        uploadedImageUrls.addAll(_perroImageUrls);
+
         // Obtiene el userId del usuario autenticado
         String userId = FirebaseAuth.instance.currentUser!.uid;
 
-        // Después de subir las imágenes, guardamos el resto de los datos del perro
+        // Datos del perro
         Map<String, dynamic> perroData = {
           'raza': _raza,
           'genero': _genero,
           'precio': _precio,
           'descripcion': _descripcion,
-          'images': uploadedImageUrls,  // Guardamos las URLs de las imágenes en Firestore
-          'userId': userId, 
+          'images': uploadedImageUrls,  // Guardar las URLs de las imágenes
+          'userId': userId,
         };
 
+        // Guardar o actualizar el perro en Firestore
         if (widget.perro == null) {
           await FirebaseFirestore.instance.collection('perros').add(perroData);
         } else {
           await FirebaseFirestore.instance.collection('perros').doc(widget.perro!['id']).update(perroData);
         }
 
-        // Cambiar el índice de navegación en lugar de hacer pop()
+        // Indicar que el perro fue guardado correctamente
         widget.onPerroGuardado();
-
       } catch (e) {
-        // Manejo de errores si algo sale mal durante la subida de las imágenes
         print("Error subiendo la imagen: $e");
-
-        // Aquí puedes mostrar un mensaje de error al usuario
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error subiendo imágenes, por favor inténtalo de nuevo.'))
         );
@@ -86,12 +114,15 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
+      body: _isLoading
+        ? Center(child: CircularProgressIndicator())
+        : Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
+              // Campos de texto para raza, género, precio y descripción
               TextFormField(
                 initialValue: _raza,
                 decoration: InputDecoration(labelText: 'Raza'),
@@ -137,19 +168,25 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
               ),
               SizedBox(height: 20),
 
-              // Widget de selección de imágenes reutilizado
+              // Sección de imágenes
               BusinessImagesSection(
-                mobileImages: _perroImages,  // Lista de imágenes seleccionadas
-                webImages: [],  // Si se usaran imágenes en web
-                onAddImage: _pickImage,  // Método para seleccionar imágenes
+                mobileImages: _perroImages,  // Lista de imágenes locales
+                webImages: _perroImageBytes,  // Lista de imágenes descargadas en formato Uint8List
+                onAddImage: _pickImage,  // Método para seleccionar nuevas imágenes
                 onDeleteImage: (index) {
                   setState(() {
-                    _perroImages.removeAt(index);  // Elimina la imagen seleccionada
+                    if (index < _perroImages.length) {
+                      _perroImages.removeAt(index);  // Eliminar imagen local
+                    } else {
+                      _perroImageBytes.removeAt(index - _perroImages.length);  // Eliminar imagen descargada
+                      _perroImageUrls.removeAt(index - _perroImages.length); // También eliminar la URL
+                    }
                   });
                 },
-                role: 'Perro',  // Este valor es indiferente aquí, pero debe estar presente
+                role: 'Perro',
               ),
 
+              // Botón de guardar
               ElevatedButton(
                 onPressed: _savePerro,
                 child: Text('Guardar'),
@@ -161,6 +198,7 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
     );
   }
 
+  // Método para seleccionar nuevas imágenes locales
   Future<void> _pickImage() async {
     final File? pickedImage = await _imageService.pickImage();
     if (pickedImage != null) {
