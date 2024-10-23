@@ -10,6 +10,7 @@ import 'package:dogland/screens/perros/razas_screen.dart';
 import 'package:dogland/widgets/bottom_navbar.dart';
 import 'package:dogland/screens/login/login_screen.dart';
 import 'package:dogland/screens/perros/mis_perros_screen.dart';
+import 'package:dogland/screens/perros/perro_form_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -20,12 +21,17 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   int _comerciosIndex = 0;
   int? _misPerrosIndex;
+  Map<String, dynamic>? _selectedPerro;
   Map<String, dynamic>? _selectedComercioData;
+
+  static const int agregarPerroIndex = 2;
+  static const int editarPerroIndex = 3; 
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
       _misPerrosIndex = null;
+      _selectedPerro = null;
     });
   }
 
@@ -55,8 +61,33 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _goToAgregarPerro() {
+    setState(() {
+      _misPerrosIndex = agregarPerroIndex;  // Cambia al índice de "Agregar Perro"
+    });
+  }
+
+  void _onPerroGuardado() {
+    setState(() {
+      _misPerrosIndex = 1;  // Regresa al índice de "Mis Perros" después de guardar
+    });
+  }
+
+  void _goToEditarPerro(Map<String, dynamic> perro) {
+    setState(() {
+      _selectedPerro = perro;  // Almacenar el perro que se va a editar
+      _misPerrosIndex = editarPerroIndex;
+    });
+  }
+
   String _getTitle() {
-    if (_misPerrosIndex != null) {
+    if (_misPerrosIndex == agregarPerroIndex) {
+      return 'Agregar Perro';
+    }
+    if (_misPerrosIndex == editarPerroIndex) {
+      return 'Editar Perro';
+    }
+    if (_misPerrosIndex == 1) {
       return 'Mis Perros';
     }
     if (_selectedIndex == 4 && _comerciosIndex == 1 && _selectedComercioData != null) {
@@ -86,12 +117,12 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           });
         },
-        onBackPressed: _misPerrosIndex == 1
-            ? () => setState(() => _misPerrosIndex = null)
+        onBackPressed: _misPerrosIndex != null
+            ? () => _goToMisPerros()
             : _comerciosIndex == 1
                 ? _goBackToComercios
                 : _goBackToInicio,
-        showBackButton: _misPerrosIndex == 1 || _comerciosIndex == 1 || _selectedIndex == 4,
+        showBackButton: _misPerrosIndex == 1 || _misPerrosIndex == agregarPerroIndex || _misPerrosIndex == editarPerroIndex || _comerciosIndex == 1 || _selectedIndex == 4,
       ),
       body: IndexedStack(
         index: _misPerrosIndex != null ? 6 : _selectedIndex,
@@ -110,7 +141,19 @@ class _HomeScreenState extends State<HomeScreen> {
             onBackPressed: _goBackToComercios,
           ),
           RazasScreen(),
-          MisPerrosScreen(),
+          _misPerrosIndex == agregarPerroIndex
+              ? PerroFormScreen(
+                  onPerroGuardado: _onPerroGuardado,
+                )
+              : _misPerrosIndex == editarPerroIndex && _selectedPerro != null
+                  ? PerroFormScreen(
+                      perro: _selectedPerro,
+                      onPerroGuardado: _onPerroGuardado,  
+                    )
+                  : MisPerrosScreen(
+                    onAgregarPerroTapped: _goToAgregarPerro,
+                    onEditarPerroTapped: _goToEditarPerro,  
+                  ),
         ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
