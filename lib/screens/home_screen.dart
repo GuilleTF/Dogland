@@ -117,11 +117,22 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           });
         },
-        onBackPressed: _misPerrosIndex != null
-            ? () => _goToMisPerros()
-            : _comerciosIndex == 1
-                ? _goBackToComercios
-                : _goBackToInicio,
+        onBackPressed: () {
+          if (_misPerrosIndex == 1) {
+            setState(() {
+              _misPerrosIndex = null;
+              _selectedIndex = 3;  // Vuelve al Perfil
+            });
+          } else if (_misPerrosIndex == agregarPerroIndex || _misPerrosIndex == editarPerroIndex) {
+            setState(() {
+              _misPerrosIndex = 1;  // Vuelve a la lista de Mis Perros
+            });
+          } else if (_comerciosIndex == 1) {
+            _goBackToComercios();
+          } else {
+            _goBackToInicio();
+          }
+        },
         showBackButton: _misPerrosIndex == 1 || _misPerrosIndex == agregarPerroIndex || _misPerrosIndex == editarPerroIndex || _comerciosIndex == 1 || _selectedIndex == 4,
       ),
       body: IndexedStack(
