@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 
 class PerroCard extends StatelessWidget {
   final Map<String, dynamic> perro;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback? onEdit; // Cambiado a opcional
+  final VoidCallback? onDelete; // Cambiado a opcional
+  final bool showActions; // Añadido para controlar la visibilidad de los botones
 
-  PerroCard({required this.perro, required this.onEdit, required this.onDelete});
+  PerroCard({
+    required this.perro,
+    this.onEdit,
+    this.onDelete,
+    this.showActions = true, // Por defecto, muestra los botones
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,17 +20,17 @@ class PerroCard extends StatelessWidget {
         : null;
 
     return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),  // Reduce los márgenes laterales
+      margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
       elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(12.0),  // Añadir más padding para darle espacio a la imagen
+        padding: const EdgeInsets.all(12.0),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,  // Centrar verticalmente la fila
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Imagen del perro
             Container(
-              width: 90,  // Ancho de la imagen
-              height: 90,  // Altura de la imagen
+              width: 90,
+              height: 90,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12.0),
                 color: Colors.grey[200],
@@ -41,11 +47,11 @@ class PerroCard extends StatelessWidget {
                     )
                   : Icon(
                       Icons.pets,
-                      size: 80,  // Tamaño del ícono cuando no hay imagen
+                      size: 80,
                       color: Colors.grey[600],
                     ),
             ),
-            SizedBox(width: 16.0),  // Separador entre la imagen y el texto
+            SizedBox(width: 16.0),
             // Detalles del perro
             Expanded(
               child: Column(
@@ -63,20 +69,21 @@ class PerroCard extends StatelessWidget {
                 ],
               ),
             ),
-            // Iconos de editar y eliminar en una fila
-            Row(
-              mainAxisSize: MainAxisSize.min,  // Mantener los botones compactos
-              children: [
-                IconButton(
-                  icon: Icon(Icons.edit, size: 30),
-                  onPressed: onEdit,
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete, size: 30),
-                  onPressed: onDelete,
-                ),
-              ],
-            ),
+            // Mostrar acciones solo si `showActions` es true
+            if (showActions)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit, size: 30),
+                    onPressed: onEdit,
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete, size: 30),
+                    onPressed: onDelete,
+                  ),
+                ],
+              ),
           ],
         ),
       ),

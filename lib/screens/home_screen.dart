@@ -6,7 +6,7 @@ import 'package:dogland/widgets/home_app_bar.dart';
 import 'package:dogland/widgets/home_content.dart';
 import 'package:dogland/widgets/comercios_stack.dart';
 import 'package:dogland/screens/perfil_screen.dart';
-import 'package:dogland/screens/perros/razas_screen.dart';
+import 'package:dogland/screens/perros/perros_screen.dart';
 import 'package:dogland/widgets/bottom_navbar.dart';
 import 'package:dogland/screens/login/login_screen.dart';
 import 'package:dogland/screens/perros/mis_perros_screen.dart';
@@ -98,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 2: return 'Mensajes';
       case 3: return 'Perfil';
       case 4: return 'Comercios';
-      case 5: return 'Razas de Perros';
+      case 5: return 'Perros';
       default: return 'Inicio';
     }
   }
@@ -151,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onComercioSelected: _selectComercio,
             onBackPressed: _goBackToComercios,
           ),
-          RazasScreen(),
+          PerrosScreen(),
           _misPerrosIndex == agregarPerroIndex
               ? PerroFormScreen(
                   onPerroGuardado: _onPerroGuardado,
