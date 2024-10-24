@@ -73,6 +73,7 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
             onSexoFilterChanged: (_) {},  // No hace nada
             onPriceFilterChanged: (_) {}, // No hace nada
             showFilters: false,
+            showLocationFilter: true,
           ),
           Expanded(
             child: ListView.builder(

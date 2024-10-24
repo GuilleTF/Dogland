@@ -95,6 +95,7 @@ class _PerrosScreenState extends State<PerrosScreen> {
               _filterPerros();
             },
             showFilters: true,  // Mostrar los filtros
+            showLocationFilter: false,
           ),
           Expanded(
             child: ListView.builder(

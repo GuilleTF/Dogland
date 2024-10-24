@@ -5,10 +5,11 @@ class CustomSearchBar extends StatefulWidget {
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onLocationFilterPressed;
   final List<String> razas;
-  final ValueChanged<String> onRazaFilterChanged;
-  final ValueChanged<String> onSexoFilterChanged;
+  final ValueChanged<String?> onRazaFilterChanged;
+  final ValueChanged<String?> onSexoFilterChanged;
   final ValueChanged<RangeValues> onPriceFilterChanged;
-  final bool showFilters; // Nueva bandera para controlar la visibilidad de los filtros
+  final bool showFilters;
+  final bool showLocationFilter; // Nueva bandera para controlar la visibilidad del botón de ubicación
 
   CustomSearchBar({
     required this.searchController,
@@ -18,7 +19,8 @@ class CustomSearchBar extends StatefulWidget {
     required this.onRazaFilterChanged,
     required this.onSexoFilterChanged,
     required this.onPriceFilterChanged,
-    required this.showFilters,  // Parámetro requerido para controlar los filtros
+    required this.showFilters,
+    this.showLocationFilter = false, // El botón de ubicación estará oculto por defecto
   });
 
   @override
@@ -52,51 +54,38 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
 
           // Mostrar los filtros adicionales solo si showFilters es true
           if (widget.showFilters) ...[
-            // Dropdown para filtrar por raza
-            DropdownButtonFormField<String>(
-              value: selectedRaza,
-              decoration: InputDecoration(
-                labelText: 'Filtrar por Raza',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
+            // Colocar filtros de raza y sexo en una fila (Row)
+            Row(
+              children: [
+                // Botón de filtro de raza
+                Expanded(
+                  child: _buildFilterButton(
+                    label: selectedRaza ?? 'Filtrar por Raza',
+                    items: widget.razas,
+                    onSelected: (value) {
+                      setState(() {
+                        selectedRaza = value;
+                      });
+                      widget.onRazaFilterChanged(value);
+                    },
+                  ),
                 ),
-              ),
-              items: widget.razas.map((raza) {
-                return DropdownMenuItem(
-                  value: raza,
-                  child: Text(raza),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedRaza = value;
-                });
-                widget.onRazaFilterChanged(value!);
-              },
-            ),
-            SizedBox(height: 8.0),
+                SizedBox(width: 8.0), // Espacio entre los dos botones
 
-            // Dropdown para filtrar por sexo
-            DropdownButtonFormField<String>(
-              value: selectedSexo,
-              decoration: InputDecoration(
-                labelText: 'Filtrar por Sexo',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
+                // Botón de filtro de sexo
+                Expanded(
+                  child: _buildFilterButton(
+                    label: selectedSexo ?? 'Filtrar por Sexo',
+                    items: ['Macho', 'Hembra'],
+                    onSelected: (value) {
+                      setState(() {
+                        selectedSexo = value;
+                      });
+                      widget.onSexoFilterChanged(value);
+                    },
+                  ),
                 ),
-              ),
-              items: ['Macho', 'Hembra'].map((sexo) {
-                return DropdownMenuItem(
-                  value: sexo,
-                  child: Text(sexo),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedSexo = value;
-                });
-                widget.onSexoFilterChanged(value!);
-              },
+              ],
             ),
             SizedBox(height: 8.0),
 
@@ -125,14 +114,57 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
             ),
           ],
 
-          // Botón de filtro por ubicación (opcional en ambos casos)
-          ElevatedButton.icon(
-            icon: Icon(Icons.location_on),
-            label: Text('Filtrar por Ubicación'),
-            onPressed: widget.onLocationFilterPressed,
-          ),
+          // Mostrar el botón de ubicación solo si showLocationFilter es true
+          if (widget.showLocationFilter)
+            ElevatedButton.icon(
+              icon: Icon(Icons.location_on),
+              label: Text('Filtrar por Ubicación'),
+              onPressed: widget.onLocationFilterPressed,
+            ),
         ],
       ),
+    );
+  }
+
+  // Widget personalizado para el botón de filtro que muestra un BottomSheet con scroll
+  Widget _buildFilterButton({
+    required String label,
+    required List<String> items,
+    required ValueChanged<String?> onSelected,
+  }) {
+    return ElevatedButton(
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          builder: (context) {
+            return Container(
+              height: 300,  // Tamaño fijo para que no ocupe toda la pantalla
+              child: ListView.builder(
+                itemCount: items.length + 1,  // Incluye la opción de quitar filtro
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return ListTile(
+                      title: Text('Quitar filtro'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        onSelected(null);
+                      },
+                    );
+                  }
+                  return ListTile(
+                    title: Text(items[index - 1]),
+                    onTap: () {
+                      Navigator.pop(context);
+                      onSelected(items[index - 1]);
+                    },
+                  );
+                },
+              ),
+            );
+          },
+        );
+      },
+      child: Text(label),
     );
   }
 }
