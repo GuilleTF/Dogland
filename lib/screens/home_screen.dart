@@ -6,11 +6,12 @@ import 'package:dogland/widgets/home_app_bar.dart';
 import 'package:dogland/widgets/home_content.dart';
 import 'package:dogland/widgets/comercios_stack.dart';
 import 'package:dogland/screens/perfil_screen.dart';
-import 'package:dogland/screens/perros/perros_screen.dart';
 import 'package:dogland/widgets/bottom_navbar.dart';
 import 'package:dogland/screens/login/login_screen.dart';
 import 'package:dogland/screens/perros/mis_perros_screen.dart';
 import 'package:dogland/screens/perros/perro_form_screen.dart';
+import 'package:dogland/widgets/perros_stack.dart';
+
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -20,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   int _comerciosIndex = 0;
+  int _perrosIndex = 0;
   int? _misPerrosIndex;
   Map<String, dynamic>? _selectedPerro;
   Map<String, dynamic>? _selectedComercioData;
@@ -31,7 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedIndex = index;
       _misPerrosIndex = null;
-      _selectedPerro = null;
     });
   }
 
@@ -46,6 +47,20 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _comerciosIndex = 0;
       _selectedComercioData = null;
+    });
+  }
+
+  void _selectPerro(Map<String, dynamic> perroData) {
+    setState(() {
+      _selectedPerro = perroData;
+      _perrosIndex = 1;  // Mueve al detalle del perro
+    });
+  }
+
+  void _goBackToPerros() {
+    setState(() {
+      _perrosIndex = 0;  // Vuelve a la lista de perros
+      _selectedPerro = null;
     });
   }
 
@@ -93,6 +108,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_selectedIndex == 4 && _comerciosIndex == 1 && _selectedComercioData != null) {
       return _selectedComercioData!['username'] ?? 'Comercio';
     }
+    if(_selectedIndex == 5 && _perrosIndex == 1 && _selectedPerro != null){
+      return _selectedPerro!['raza'] ?? 'Perro';
+    }
     switch (_selectedIndex) {
       case 1: return 'Favoritos';
       case 2: return 'Mensajes';
@@ -129,11 +147,14 @@ class _HomeScreenState extends State<HomeScreen> {
             });
           } else if (_comerciosIndex == 1) {
             _goBackToComercios();
-          } else {
+          } else if (_perrosIndex == 1) {
+            _goBackToPerros();
+          }
+           else {
             _goBackToInicio();
           }
         },
-        showBackButton: _misPerrosIndex == 1 || _misPerrosIndex == agregarPerroIndex || _misPerrosIndex == editarPerroIndex || _comerciosIndex == 1 || _selectedIndex == 4,
+        showBackButton: _misPerrosIndex == 1 || _misPerrosIndex == agregarPerroIndex || _misPerrosIndex == editarPerroIndex || _comerciosIndex == 1 || _selectedIndex == 4 || _perrosIndex == 1 || _selectedIndex == 5,
       ),
       body: IndexedStack(
         index: _misPerrosIndex != null ? 6 : _selectedIndex,
@@ -151,7 +172,12 @@ class _HomeScreenState extends State<HomeScreen> {
             onComercioSelected: _selectComercio,
             onBackPressed: _goBackToComercios,
           ),
-          PerrosScreen(),
+          PerrosStack(
+            perrosIndex: _perrosIndex,
+            selectedPerroData: _selectedPerro,
+            onPerroSelected: _selectPerro,
+            onBackPressed: _goBackToPerros,
+          ),
           _misPerrosIndex == agregarPerroIndex
               ? PerroFormScreen(
                   onPerroGuardado: _onPerroGuardado,

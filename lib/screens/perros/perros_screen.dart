@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dogland/widgets/perro_card.dart';
 import 'package:dogland/widgets/custom_search_bar.dart';
+import 'package:dogland/data/razas.dart';  // Tu lista de razas
 
 class PerrosScreen extends StatefulWidget {
+  final Function(Map<String, dynamic>) onPerroSelected;
+
+  const PerrosScreen({Key? key, required this.onPerroSelected}) : super(key: key);
+
   @override
   _PerrosScreenState createState() => _PerrosScreenState();
 }
@@ -12,6 +17,10 @@ class _PerrosScreenState extends State<PerrosScreen> {
   TextEditingController _searchController = TextEditingController();
   List<QueryDocumentSnapshot> _allPerros = [];
   List<QueryDocumentSnapshot> _filteredPerros = [];
+
+  String? _selectedRaza;
+  String? _selectedSexo;
+  RangeValues _priceRange = RangeValues(0, 1000);
 
   @override
   void initState() {
@@ -27,25 +36,30 @@ class _PerrosScreenState extends State<PerrosScreen> {
     super.dispose();
   }
 
-  // Cargar todos los perros de la colección 'perros' en Firestore
   void _loadPerros() {
     FirebaseFirestore.instance.collection('perros').snapshots().listen((snapshot) {
       setState(() {
         _allPerros = snapshot.docs;
-        _filteredPerros = _allPerros; // Inicialmente, mostramos todos los perros
+        _filteredPerros = _allPerros;
       });
     });
   }
 
-  // Filtrar los perros según lo que se escribe en el campo de búsqueda
   void _filterPerros() {
     String query = _searchController.text.toLowerCase();
+
     setState(() {
       _filteredPerros = _allPerros.where((doc) {
         var data = doc.data() as Map<String, dynamic>;
-        final razaMatch = (data['raza'] ?? '').toLowerCase().contains(query);
-        final descripcionMatch = (data['descripcion'] ?? '').toLowerCase().contains(query);
-        return razaMatch || descripcionMatch;
+
+        bool matchesSearch = data['raza'].toLowerCase().contains(query) ||
+            data['descripcion'].toLowerCase().contains(query);
+
+        bool matchesRaza = _selectedRaza == null || data['raza'] == _selectedRaza;
+        bool matchesSexo = _selectedSexo == null || data['genero'] == _selectedSexo;
+        bool matchesPrice = (data['precio'] >= _priceRange.start && data['precio'] <= _priceRange.end);
+
+        return matchesSearch && matchesRaza && matchesSexo && matchesPrice;
       }).toList();
     });
   }
@@ -55,45 +69,43 @@ class _PerrosScreenState extends State<PerrosScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // Barra de búsqueda personalizada
           CustomSearchBar(
             searchController: _searchController,
             onSearchChanged: (query) => _filterPerros(),
             onLocationFilterPressed: () {
-              // Implementación futura para filtro de ubicación
-              // Podrías agregar un diálogo o un selector de ubicaciones
+              // Implementación de filtro de ubicación
             },
+            razas: razasDePerros,  // Lista de razas de perros
+            onRazaFilterChanged: (value) {
+              setState(() {
+                _selectedRaza = value;
+              });
+              _filterPerros();
+            },
+            onSexoFilterChanged: (value) {
+              setState(() {
+                _selectedSexo = value;
+              });
+              _filterPerros();
+            },
+            onPriceFilterChanged: (RangeValues range) {
+              setState(() {
+                _priceRange = range;
+              });
+              _filterPerros();
+            },
+            showFilters: true,  // Mostrar los filtros
           ),
-          // Listado de perros filtrados
           Expanded(
             child: ListView.builder(
               itemCount: _filteredPerros.length,
               itemBuilder: (context, index) {
                 var perroData = _filteredPerros[index].data() as Map<String, dynamic>;
 
-                // Determinar la imagen del perro
-                String? imagen = perroData['images'] != null && perroData['images'].isNotEmpty
-                    ? perroData['images'][0] // Primera imagen de la lista
-                    : null;
-
                 return PerroCard(
-                  perro: _filteredPerros[index].data() as Map<String, dynamic>,
-                  showActions: false,
-                  onEdit: () {
-                    // Aquí puedes implementar la edición del perro
-                  },
-                  onDelete: () async {
-                    try {
-                      // Eliminar el perro de Firestore
-                      await FirebaseFirestore.instance
-                          .collection('perros')
-                          .doc(_filteredPerros[index].id)
-                          .delete();
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Perro eliminado')));
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error eliminando el perro: $e')));
-                    }
-                  },
+                  perro: perroData,
+                  onTap: () => widget.onPerroSelected(perroData),
+                  showActions: false,  // No mostrar los botones de acción
                 );
               },
             ),
