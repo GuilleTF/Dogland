@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:dogland/services/image_service.dart';
 import 'package:dogland/widgets/business_images_section.dart';
+import 'package:dogland/data/razas.dart';
 
 class PerroFormScreen extends StatefulWidget {
   final Map<String, dynamic>? perro;
@@ -22,34 +23,30 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
   final ImageService _imageService = ImageService();
 
-  String _raza = '';
   String _genero = 'Macho';
   double _precio = 0.0;
   String _descripcion = '';
-  List<File> _perroImages = [];  // Para imágenes locales
-  List<Uint8List> _perroImageBytes = [];  // Para imágenes descargadas
-  List<String> _perroImageUrls = [];  // Para URLs de imágenes guardadas
+  List<File> _perroImages = [];
+  List<Uint8List> _perroImageBytes = [];
+  List<String> _perroImageUrls = [];
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.perro != null) {
-      _raza = widget.perro!['raza'];
       _genero = widget.perro!['genero'];
       _precio = widget.perro!['precio'];
       _descripcion = widget.perro!['descripcion'];
       _perroImageUrls = List<String>.from(widget.perro!['images'] ?? []);
-      _loadPerroImages();  // Cargar las imágenes guardadas
+      _loadPerroImages();
     }
   }
 
   Future<void> _loadPerroImages() async {
     setState(() => _isLoading = true);
     try {
-      print('Cargando imágenes: $_perroImageUrls');
       _perroImageBytes = await _imageService.loadImagesFromUrls(_perroImageUrls);
-      setState(() {});
     } catch (e) {
       print("Error al cargar las imágenes: $e");
     } finally {
@@ -61,25 +58,38 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
     if (_formKey.currentState!.saveAndValidate()) {
       final formData = _formKey.currentState?.value;
 
+      // Verificar autenticación del usuario
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('El usuario no está autenticado.'))
+        );
+        return;
+      }
+
       List<String> uploadedImageUrls = [];
       try {
+        // Subir imágenes nuevas seleccionadas
         for (var image in _perroImages) {
           String imageUrl = await _imageService.uploadImage(image, 'perros_images');
           uploadedImageUrls.add(imageUrl);
         }
 
+        // Agregar imágenes existentes (si las hay)
         uploadedImageUrls.addAll(_perroImageUrls);
 
-        String userId = FirebaseAuth.instance.currentUser!.uid;
+        // Datos del perro, incluyendo userId
+        String userId = user.uid;  // Asignar el userId desde el usuario autenticado
         Map<String, dynamic> perroData = {
-          'raza': formData!['raza'],
+          'raza': formData!['raza'], // La raza seleccionada
           'genero': formData['genero'],
-          'precio': formData['precio'],
+          'precio': double.parse(formData['precio']),  // Asegurarse de convertir 'precio' a double
           'descripcion': formData['descripcion'],
           'images': uploadedImageUrls,
-          'userId': userId,
+          'userId': userId, // Asegurar que 'userId' se guarde correctamente
         };
 
+        // Guardar o actualizar el perro en Firestore
         if (widget.perro == null) {
           await FirebaseFirestore.instance.collection('perros').add(perroData);
         } else {
@@ -88,9 +98,9 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
 
         widget.onPerroGuardado();
       } catch (e) {
-        print("Error subiendo las imágenes: $e");
+        print("Error subiendo las imágenes o datos: $e");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error subiendo imágenes, por favor inténtalo de nuevo.'))
+          SnackBar(content: Text('Error subiendo datos, por favor inténtalo de nuevo.'))
         );
       }
     }
@@ -110,12 +120,39 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
                       key: _formKey,
                       child: ListView(
                         children: [
-                          FormBuilderTextField(
+                          // Autocomplete para la raza del perro
+                          FormBuilderField<String>(
                             name: 'raza',
-                            initialValue: _raza,
-                            decoration: InputDecoration(labelText: 'Raza'),
-                            validator: FormBuilderValidators.required(),
+                            initialValue: widget.perro?['raza'] ?? '',
+                            builder: (FormFieldState<String?> field) {
+                              return Autocomplete<String>(
+                                optionsBuilder: (TextEditingValue textEditingValue) {
+                                  if (textEditingValue.text.isEmpty) {
+                                    return const Iterable<String>.empty();
+                                  }
+                                  return razasDePerros.where((raza) => raza
+                                      .toLowerCase()
+                                      .contains(textEditingValue.text.toLowerCase()));
+                                },
+                                onSelected: (String raza) {
+                                  field.didChange(raza); // Notificar al FormBuilder
+                                },
+                                fieldViewBuilder: (BuildContext context, TextEditingController textEditingController, FocusNode focusNode, VoidCallback onFieldSubmitted) {
+                                  return TextField(
+                                    controller: textEditingController,
+                                    focusNode: focusNode,
+                                    decoration: InputDecoration(
+                                      hintText: 'Escribe la raza del perro',
+                                      labelText: 'Raza',
+                                    ),
+                                  );
+                                },
+                              );
+                            },
                           ),
+                          const SizedBox(height: 20),
+
+                          // Selector de género
                           FormBuilderDropdown<String>(
                             name: 'genero',
                             initialValue: _genero,
@@ -168,7 +205,6 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
                       ),
                     ),
                   ),
-
                   ElevatedButton(
                     onPressed: _savePerro,
                     child: Text('Guardar'),
