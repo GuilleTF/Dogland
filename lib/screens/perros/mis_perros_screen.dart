@@ -69,10 +69,16 @@ class _MisPerrosScreenState extends State<MisPerrosScreen> {
                     );
                   },
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: widget.onAgregarPerroTapped,  // Llama a la función que cambia el índice en HomeScreen
-        child: Icon(Icons.add),
+      floatingActionButton: Container(
+        width: 70,
+        height: 70,
+        child:
+          FloatingActionButton(
+            onPressed: widget.onAgregarPerroTapped,  // Llama a la función que cambia el índice en HomeScreen
+            child: Icon(Icons.add, size: 30,),
+          ),
       ),
+      
     );
   }
 }

@@ -9,49 +9,73 @@ class PerroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Si el perro tiene imágenes, mostramos la primera, si no, mostramos el ícono de perro.
     final String? imagen = (perro['images'] != null && perro['images'].isNotEmpty)
         ? perro['images'][0] // Primera imagen de la lista
         : null;
 
     return Card(
-      margin: EdgeInsets.all(8.0),
-      child: ListTile(
-        leading: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8.0),
-            color: Colors.grey[200],
-          ),
-          child: imagen != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: Image.network(
-                    imagen,
-                    fit: BoxFit.cover,
-                    width: 60,
-                    height: 60,
-                  ),
-                )
-              : Icon(
-                  Icons.pets,
-                  size: 40,
-                  color: Colors.grey[600],
-                ),
-        ),
-        title: Text(perro['raza']),
-        subtitle: Text('${perro['genero']} - ${perro['precio']}€'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+      margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),  // Reduce los márgenes laterales
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),  // Añadir más padding para darle espacio a la imagen
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,  // Centrar verticalmente la fila
           children: [
-            IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: onEdit,
+            // Imagen del perro
+            Container(
+              width: 90,  // Ancho de la imagen
+              height: 90,  // Altura de la imagen
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12.0),
+                color: Colors.grey[200],
+              ),
+              child: imagen != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12.0),
+                      child: Image.network(
+                        imagen,
+                        fit: BoxFit.cover,
+                        width: 90,
+                        height: 90,
+                      ),
+                    )
+                  : Icon(
+                      Icons.pets,
+                      size: 80,  // Tamaño del ícono cuando no hay imagen
+                      color: Colors.grey[600],
+                    ),
             ),
-            IconButton(
-              icon: Icon(Icons.delete),
-              onPressed: onDelete,
+            SizedBox(width: 16.0),  // Separador entre la imagen y el texto
+            // Detalles del perro
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    perro['raza'],
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8.0),
+                  Text(
+                    '${perro['genero']} - ${perro['precio']}€',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+            // Iconos de editar y eliminar en una fila
+            Row(
+              mainAxisSize: MainAxisSize.min,  // Mantener los botones compactos
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit, size: 30),
+                  onPressed: onEdit,
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete, size: 30),
+                  onPressed: onDelete,
+                ),
+              ],
             ),
           ],
         ),
