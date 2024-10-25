@@ -37,12 +37,15 @@ class _PerrosScreenState extends State<PerrosScreen> {
   }
 
   void _loadPerros() {
-    FirebaseFirestore.instance.collection('perros').snapshots().listen((snapshot) {
-      setState(() {
-        _allPerros = snapshot.docs;
-        _filteredPerros = _allPerros;
+    FirebaseFirestore.instance
+      .collection('perros')
+      .snapshots()
+      .listen((snapshot) {
+        setState(() {
+          _allPerros = snapshot.docs;
+          _filteredPerros = _allPerros;
+        });
       });
-    });
   }
 
   void _filterPerros() {
@@ -62,6 +65,32 @@ class _PerrosScreenState extends State<PerrosScreen> {
         return matchesSearch && matchesRaza && matchesSexo && matchesPrice;
       }).toList();
     });
+  }
+
+  Future<void> _selectPerroWithCriadorData(Map<String, dynamic> perroData) async {
+    String userId = perroData['userId'];
+
+    try {
+      // Consultar los datos del criador desde la colección 'users'
+      DocumentSnapshot criadorSnapshot = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+
+      if (criadorSnapshot.exists) {
+        Map<String, dynamic> criadorData = criadorSnapshot.data() as Map<String, dynamic>;
+
+        // Combinar los datos del perro y del criador en un solo mapa
+        Map<String, dynamic> combinedData = {
+          'perro': perroData,
+          'criador': criadorData,
+        };
+
+        // Pasar los datos combinados a la siguiente pantalla
+        widget.onPerroSelected(combinedData);
+      } else {
+        print("No se encontró el criador con el ID: $userId");
+      }
+    } catch (e) {
+      print("Error al obtener los datos del criador: $e");
+    }
   }
 
   @override
@@ -105,7 +134,7 @@ class _PerrosScreenState extends State<PerrosScreen> {
 
                 return PerroCard(
                   perro: perroData,
-                  onTap: () => widget.onPerroSelected(perroData),
+                  onTap: () => _selectPerroWithCriadorData(perroData),
                   showActions: false,  // No mostrar los botones de acción
                 );
               },

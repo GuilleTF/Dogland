@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _comerciosIndex = 0;
   int _perrosIndex = 0;
   int? _misPerrosIndex;
-  Map<String, dynamic>? _selectedPerro;
+  Map<String, dynamic>? _selectedPerroData;
   Map<String, dynamic>? _selectedComercioData;
 
   static const int agregarPerroIndex = 2;
@@ -52,15 +52,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _selectPerro(Map<String, dynamic> perroData) {
     setState(() {
-      _selectedPerro = perroData;
-      _perrosIndex = 1;  // Mueve al detalle del perro
+      _selectedPerroData = perroData;
+      _perrosIndex = 1;
     });
   }
 
   void _goBackToPerros() {
     setState(() {
-      _perrosIndex = 0;  // Vuelve a la lista de perros
-      _selectedPerro = null;
+      _perrosIndex = 0;
+      _selectedPerroData = null;
     });
   }
 
@@ -90,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _goToEditarPerro(Map<String, dynamic> perro) {
     setState(() {
-      _selectedPerro = perro;  // Almacenar el perro que se va a editar
+      _selectedPerroData = perro;  // Almacenar el perro que se va a editar
       _misPerrosIndex = editarPerroIndex;
     });
   }
@@ -108,8 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_selectedIndex == 4 && _comerciosIndex == 1 && _selectedComercioData != null) {
       return _selectedComercioData!['username'] ?? 'Comercio';
     }
-    if(_selectedIndex == 5 && _perrosIndex == 1 && _selectedPerro != null){
-      return _selectedPerro!['raza'] ?? 'Perro';
+    if(_selectedIndex == 5 && _perrosIndex == 1 && _selectedPerroData != null){
+      return _selectedPerroData!['raza'] ?? 'Perro';
     }
     switch (_selectedIndex) {
       case 1: return 'Favoritos';
@@ -174,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           PerrosStack(
             perrosIndex: _perrosIndex,
-            selectedPerroData: _selectedPerro,
+            selectedPerroData: _selectedPerroData,
             onPerroSelected: _selectPerro,
             onBackPressed: _goBackToPerros,
           ),
@@ -182,9 +182,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ? PerroFormScreen(
                   onPerroGuardado: _onPerroGuardado,
                 )
-              : _misPerrosIndex == editarPerroIndex && _selectedPerro != null
+              : _misPerrosIndex == editarPerroIndex && _selectedPerroData != null
                   ? PerroFormScreen(
-                      perro: _selectedPerro,
+                      perro: _selectedPerroData,
                       onPerroGuardado: _onPerroGuardado,  
                     )
                   : MisPerrosScreen(
