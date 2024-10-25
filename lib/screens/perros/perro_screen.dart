@@ -1,5 +1,10 @@
+// screens/perros/perro_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:dogland/widgets/image_carousel.dart';
+import 'package:dogland/widgets/contact_info.dart';
+import 'package:dogland/widgets/action_icons.dart';
+import 'package:dogland/widgets/map_view.dart';
 import 'package:dogland/widgets/share_options.dart';
 
 class PerroScreen extends StatelessWidget {
@@ -38,37 +43,16 @@ class PerroScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Scroll de imágenes del perro
-            Container(
-              height: 250,
-              child: PageView.builder(
-                itemCount: imagenes.length,
-                itemBuilder: (context, index) {
-                  return Image.network(
-                    imagenes[index],
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                  );
-                },
-              ),
-            ),
+            ImageCarousel(images: imagenes),
             const SizedBox(height: 20),
-
-            // 2. Información del perro
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    raza,
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
+                  Text(raza, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  Text(
-                    descripcion,
-                    style: TextStyle(fontSize: 16),
-                  ),
+                  Text(descripcion, style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 10),
                   Text('Género: $genero', style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 10),
@@ -76,10 +60,9 @@ class PerroScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
-            // 3. Información del criador
+            
+            // Información del Criador
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Container(
@@ -132,65 +115,17 @@ class PerroScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
 
-            // 4. Iconos de acción (Compartir, Chat, Favoritos)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildActionIcon(Icons.share, () => _showShareOptions(context, perroUrl)),
-                _buildActionIcon(Icons.chat, () {}),
-                _buildActionIcon(Icons.favorite_border, () {}),
-              ],
+            ActionIcons(
+              onShare: () => _showShareOptions(context, perroUrl),
+              onChat: () {},
+              onFavorite: () {},
             ),
-
             const SizedBox(height: 20),
-
-            // 5. Información de contacto del criador
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.phone),
-                      const SizedBox(width: 10),
-                      Text(criadorTelefono),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Icon(Icons.email),
-                      const SizedBox(width: 10),
-                      Text(criadorCorreo),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
+            ContactInfo(telefono: criadorTelefono, correo: criadorCorreo),
             const SizedBox(height: 20),
-
-            // 6. Mapa de ubicación del criador
-            Container(
-              height: 200,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: ubicacionCriador,
-                  zoom: 14,
-                ),
-                markers: {
-                  Marker(
-                    markerId: MarkerId('ubicacionCriador'),
-                    position: ubicacionCriador,
-                  ),
-                },
-              ),
-            ),
+            MapView(location: ubicacionCriador, markerId: 'ubicacionCriador'),
           ],
         ),
       ),
@@ -206,21 +141,6 @@ class PerroScreen extends StatelessWidget {
           url: perroUrl,
         );
       },
-    );
-  }
-
-  Widget _buildActionIcon(IconData icon, VoidCallback onPressed) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.black, width: 2),
-        ),
-        child: Icon(icon, color: Colors.black),
-      ),
     );
   }
 }
