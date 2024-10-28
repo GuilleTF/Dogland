@@ -11,6 +11,7 @@ import 'package:dogland/screens/login/login_screen.dart';
 import 'package:dogland/screens/perros/mis_perros_screen.dart';
 import 'package:dogland/screens/perros/perro_form_screen.dart';
 import 'package:dogland/widgets/perros_stack.dart';
+import 'package:dogland/screens/favorites_screen.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -20,11 +21,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  int _favoritosIndex = 0;
   int _comerciosIndex = 0;
   int _perrosIndex = 0;
   int? _misPerrosIndex;
   Map<String, dynamic>? _selectedPerroData;
   Map<String, dynamic>? _selectedComercioData;
+  Map<String, dynamic>? _selectedFavoriteData;
 
   static const int agregarPerroIndex = 2;
   static const int editarPerroIndex = 3; 
@@ -163,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onComerciosTapped: () => _onItemTapped(4),
             onPerrosTapped: () => _onItemTapped(5),
           ),
-          Container(color: Colors.red), // Placeholder for Favoritos
+          FavoritesScreen(), // Placeholder for Favoritos
           Container(color: Colors.blue), // Placeholder for Mensajes
           PerfilScreen(onMisPerrosTapped: _goToMisPerros),
           ComerciosStack(

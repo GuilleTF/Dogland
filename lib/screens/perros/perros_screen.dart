@@ -42,7 +42,11 @@ class _PerrosScreenState extends State<PerrosScreen> {
       .snapshots()
       .listen((snapshot) {
         setState(() {
-          _allPerros = snapshot.docs;
+          _allPerros = snapshot.docs.map((doc) {
+            var data = doc.data() as Map<String, dynamic>;
+            data['id'] = doc.id; // Asigna el ID al mapa de datos del perro
+            return doc;
+          }).toList();
           _filteredPerros = _allPerros;
         });
       });
@@ -67,7 +71,7 @@ class _PerrosScreenState extends State<PerrosScreen> {
     });
   }
 
-  Future<void> _selectPerroWithCriadorData(Map<String, dynamic> perroData) async {
+  Future<void> _selectPerroWithCriadorData(Map<String, dynamic> perroData, String perroId) async {
     String userId = perroData['userId'];
 
     try {
@@ -79,10 +83,11 @@ class _PerrosScreenState extends State<PerrosScreen> {
 
         // Combinar los datos del perro y del criador en un solo mapa
         Map<String, dynamic> combinedData = {
+          'perroId': perroId,
           'perro': perroData,
           'criador': criadorData,
         };
-
+        print("ID del perro seleccionado: ${perroId}");
         // Pasar los datos combinados a la siguiente pantalla
         widget.onPerroSelected(combinedData);
       } else {
@@ -131,10 +136,11 @@ class _PerrosScreenState extends State<PerrosScreen> {
               itemCount: _filteredPerros.length,
               itemBuilder: (context, index) {
                 var perroData = _filteredPerros[index].data() as Map<String, dynamic>;
+                var perroId = _filteredPerros[index].id;
 
                 return PerroCard(
                   perro: perroData,
-                  onTap: () => _selectPerroWithCriadorData(perroData),
+                  onTap: () => _selectPerroWithCriadorData(perroData,perroId),
                   showActions: false,  // No mostrar los botones de acción
                 );
               },

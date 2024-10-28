@@ -80,7 +80,8 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
               itemCount: _filteredComercios.length,
               itemBuilder: (context, index) {
                 var comercioData = _filteredComercios[index].data() as Map<String, dynamic>;
-
+                var comercioId = _filteredComercios[index].id;
+                
                 // Determinar la imagen que se mostrará en la tarjeta (solo de businessImages)
                 String? imagen = comercioData['businessImages'] != null &&
                         comercioData['businessImages'].isNotEmpty
@@ -91,7 +92,10 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
                   titulo: comercioData['username'] ?? 'Nombre no disponible',
                   descripcion: comercioData['description'] ?? 'Sin descripción',
                   imagen: imagen, // Asigna la imagen determinada
-                  onTap: () => widget.onComercioSelected(comercioData),
+                  onTap: () => widget.onComercioSelected({
+                      'comercioId': comercioId,
+                      ...comercioData
+                    }),
                 );
               },
             ),

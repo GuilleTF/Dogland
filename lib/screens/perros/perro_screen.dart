@@ -6,8 +6,10 @@ import 'package:dogland/widgets/contact_info.dart';
 import 'package:dogland/widgets/action_icons.dart';
 import 'package:dogland/widgets/map_view.dart';
 import 'package:dogland/widgets/share_options.dart';
+import 'package:dogland/services/favorites_service.dart';
 
-class PerroScreen extends StatelessWidget {
+class PerroScreen extends StatefulWidget {
+  final String perroId;
   final String raza;
   final String descripcion;
   final List<String> imagenes;
@@ -21,6 +23,7 @@ class PerroScreen extends StatelessWidget {
   final String perfilImagenCriadorUrl;
 
   PerroScreen({
+    required this.perroId,
     required this.raza,
     required this.descripcion,
     required this.imagenes,
@@ -35,34 +38,64 @@ class PerroScreen extends StatelessWidget {
   });
 
   @override
+  _PerroScreenState createState() => _PerroScreenState();
+}
+
+class _PerroScreenState extends State<PerroScreen> {
+  final favoritesService = FavoritesService();
+  bool isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavoriteStatus();
+  }
+
+  Future<void> _loadFavoriteStatus() async {
+    final favoriteStatus = await favoritesService.isFavorite(widget.perroId);
+    setState(() {
+      isFavorite = favoriteStatus;
+    });
+  }
+
+  void _toggleFavorite() async {
+    if (widget.perroId.isEmpty) {
+    print("Error: perroId está vacío.");
+    return;
+  }
+    await favoritesService.toggleFavorite(widget.perroId, 'perro');
+    setState(() {
+      isFavorite = !isFavorite;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final String perroUrl = 'https://dogland.com/perro/${raza.replaceAll(' ', '_')}';
+    final String perroUrl = 'https://dogland.com/perro/${widget.raza.replaceAll(' ', '_')}';
 
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ImageCarousel(images: imagenes),
+            ImageCarousel(images: widget.imagenes),
             const SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(raza, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(widget.raza, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  Text(descripcion, style: TextStyle(fontSize: 16)),
+                  Text(widget.descripcion, style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 10),
-                  Text('Género: $genero', style: TextStyle(fontSize: 16)),
+                  Text('Género: ${widget.genero}', style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 10),
-                  Text('Precio: $precio€', style: TextStyle(fontSize: 16)),
+                  Text('Precio: ${widget.precio}€', style: TextStyle(fontSize: 16)),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            
-            // Información del Criador
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Container(
@@ -87,17 +120,17 @@ class PerroScreen extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 30,
-                            backgroundImage: perfilImagenCriadorUrl.isNotEmpty
-                                ? NetworkImage(perfilImagenCriadorUrl)
+                            backgroundImage: widget.perfilImagenCriadorUrl.isNotEmpty
+                                ? NetworkImage(widget.perfilImagenCriadorUrl)
                                 : null,
-                            child: perfilImagenCriadorUrl.isEmpty
+                            child: widget.perfilImagenCriadorUrl.isEmpty
                                 ? Icon(Icons.person, size: 30)
                                 : null,
                           ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              criadorNombre,
+                              widget.criadorNombre,
                               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                               textAlign: TextAlign.left,
                             ),
@@ -106,7 +139,7 @@ class PerroScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 15),
                       Text(
-                        criadorDescripcion,
+                        widget.criadorDescripcion,
                         style: const TextStyle(fontSize: 16),
                         textAlign: TextAlign.center,
                       ),
@@ -116,16 +149,16 @@ class PerroScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-
             ActionIcons(
               onShare: () => _showShareOptions(context, perroUrl),
               onChat: () {},
-              onFavorite: () {},
+              isFavorite: isFavorite,
+              onFavoriteToggle: _toggleFavorite,
             ),
             const SizedBox(height: 20),
-            ContactInfo(telefono: criadorTelefono, correo: criadorCorreo),
+            ContactInfo(telefono: widget.criadorTelefono, correo: widget.criadorCorreo),
             const SizedBox(height: 20),
-            MapView(location: ubicacionCriador, markerId: 'ubicacionCriador'),
+            MapView(location: widget.ubicacionCriador, markerId: 'ubicacionCriador'),
           ],
         ),
       ),
@@ -137,7 +170,7 @@ class PerroScreen extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return ShareOptions(
-          shareText: 'Visita el perro de raza $raza en',
+          shareText: 'Visita el perro de raza ${widget.raza} en',
           url: perroUrl,
         );
       },

@@ -26,6 +26,7 @@ class ComerciosStack extends StatelessWidget {
         ComerciosScreen(onComercioSelected: onComercioSelected),
         if (selectedComercioData != null)
           ComercioScreen(
+            comercioId: selectedComercioData!['comercioId'] ?? '',
             nombre: selectedComercioData!['username'] ?? 'Nombre no disponible',
             descripcion: selectedComercioData!['description'] ?? 'Sin descripción',
             imagenes: List<String>.from(selectedComercioData!['businessImages'] ?? []),
