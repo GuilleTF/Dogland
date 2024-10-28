@@ -68,6 +68,12 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
             onLocationFilterPressed: () {
               // Implementación de filtro de ubicación
             },
+            razas: [],  // Vacío ya que no se usa en comercios
+            onRazaFilterChanged: (_) {},  // No hace nada
+            onSexoFilterChanged: (_) {},  // No hace nada
+            onPriceFilterChanged: (_) {}, // No hace nada
+            showFilters: false,
+            showLocationFilter: true,
           ),
           Expanded(
             child: ListView.builder(
