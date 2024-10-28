@@ -35,6 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedIndex = index;
       _misPerrosIndex = null;
+      _comerciosIndex = 0;
+      _perrosIndex = 0;
     });
   }
 
@@ -156,7 +158,13 @@ class _HomeScreenState extends State<HomeScreen> {
             _goBackToInicio();
           }
         },
-        showBackButton: _misPerrosIndex == 1 || _misPerrosIndex == agregarPerroIndex || _misPerrosIndex == editarPerroIndex || _comerciosIndex == 1 || _selectedIndex == 4 || _perrosIndex == 1 || _selectedIndex == 5,
+        showBackButton: _misPerrosIndex == 1 || 
+          _misPerrosIndex == agregarPerroIndex ||
+          _misPerrosIndex == editarPerroIndex ||
+            _comerciosIndex == 1 ||
+            _selectedIndex == 4 ||
+              _perrosIndex == 1 ||
+              _selectedIndex == 5,
       ),
       body: IndexedStack(
         index: _misPerrosIndex != null ? 6 : _selectedIndex,
