@@ -7,9 +7,13 @@ import 'package:dogland/widgets/comercio_card.dart';
 
 class FavoritesScreen extends StatelessWidget {
   final FavoritesService favoritesService = FavoritesService();
-  // final Function(Map<String, dynamic>) onComercioSelected;
-
-  FavoritesScreen();
+  final Function(Map<String, dynamic>) onPerroSelected;
+  final Function(Map<String, dynamic>) onComercioSelected;
+  
+  FavoritesScreen({
+    required this.onPerroSelected,
+    required this.onComercioSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,9 +49,11 @@ class FavoritesScreen extends StatelessWidget {
                     return itemType == 'perro'
                         ? PerroCard(
                             perro: itemData,
-                            onTap: () {
-                              // Manejar la navegación a PerroScreen
-                            },
+                            onTap: () => onPerroSelected({
+                              'perroId': itemId,
+                              'perro': itemData,
+                              'criador': itemData['userId'], // ID del usuario/criador
+                            }),
                             showActions: false
                           )
                         : ComercioCard(
@@ -57,21 +63,10 @@ class FavoritesScreen extends StatelessWidget {
                                     itemData['businessImages'].isNotEmpty
                                 ? itemData['businessImages'][0]
                                 : itemData['profileImage'],
-                            onTap: () {
-                              // Llama a onComercioSelected con datos del comercio
-                              // onComercioSelected({
-                              //   'comercioId': itemId,
-                              //   'nombre': itemData['username'] ?? 'Sin Nombre',
-                              //   'descripcion': itemData['description'] ?? 'Sin Descripción',
-                              //   'imagenes': List<String>.from(itemData['businessImages'] ?? []),
-                              //   'telefono': itemData['phoneNumber'] ?? 'No disponible',
-                              //   'correo': itemData['email'] ?? 'No disponible',
-                              //   'ubicacion': itemData['location'] != null
-                              //       ? itemData['location']
-                              //       : null,
-                              //   'perfilImagenUrl': itemData['profileImage'] ?? '',
-                              // });
-                            },
+                            onTap: () => onComercioSelected({
+                              'comercioId': itemId,
+                              ...itemData,
+                            }),
                           );
                   },
                 );

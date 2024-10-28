@@ -1,5 +1,6 @@
 // home_screen.dart
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dogland/widgets/home_app_bar.dart';
@@ -21,13 +22,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  int _favoritosIndex = 0;
   int _comerciosIndex = 0;
   int _perrosIndex = 0;
   int? _misPerrosIndex;
   Map<String, dynamic>? _selectedPerroData;
   Map<String, dynamic>? _selectedComercioData;
-  Map<String, dynamic>? _selectedFavoriteData;
 
   static const int agregarPerroIndex = 2;
   static const int editarPerroIndex = 3; 
@@ -166,7 +165,36 @@ class _HomeScreenState extends State<HomeScreen> {
             onComerciosTapped: () => _onItemTapped(4),
             onPerrosTapped: () => _onItemTapped(5),
           ),
-          FavoritesScreen(), // Placeholder for Favoritos
+          FavoritesScreen(
+            onPerroSelected: (perroData) async {
+              // Obtenemos los datos del criador para el perro seleccionado
+              final criadorSnapshot = await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(perroData['criador'])
+                  .get();
+              
+              if (criadorSnapshot.exists) {
+                final criadorData = criadorSnapshot.data() as Map<String, dynamic>;
+                setState(() {
+                  _selectedPerroData = {
+                    'perroId': perroData['perroId'],
+                    'perro': perroData['perro'],
+                    'criador': criadorData,
+                  };
+                  _perrosIndex = 1;
+                  _selectedIndex = 5;  // Cambia a la pantalla de Perros
+                });
+              }
+            },
+            onComercioSelected: (comercioData) {
+              setState(() {
+                _selectedComercioData = comercioData;
+                _comerciosIndex = 1;
+                _selectedIndex = 4;  // Cambia a la pantalla de Comercios
+              });
+            },
+          ),
+
           Container(color: Colors.blue), // Placeholder for Mensajes
           PerfilScreen(onMisPerrosTapped: _goToMisPerros),
           ComerciosStack(
