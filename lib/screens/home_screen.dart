@@ -13,7 +13,7 @@ import 'package:dogland/screens/perros/mis_perros_screen.dart';
 import 'package:dogland/screens/perros/perro_form_screen.dart';
 import 'package:dogland/widgets/perros_stack.dart';
 import 'package:dogland/screens/favorites_screen.dart';
-
+import 'package:dogland/screens/mensajes/chats_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -202,8 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
           ),
-
-          Container(color: Colors.blue), // Placeholder for Mensajes
+          ChatsListScreen(userId: FirebaseAuth.instance.currentUser!.uid),
           PerfilScreen(onMisPerrosTapped: _goToMisPerros),
           ComerciosStack(
             comerciosIndex: _comerciosIndex,

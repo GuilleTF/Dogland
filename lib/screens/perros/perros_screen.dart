@@ -87,7 +87,7 @@ class _PerrosScreenState extends State<PerrosScreen> {
           'perro': perroData,
           'criador': criadorData,
         };
-        print("ID del perro seleccionado: ${perroId}");
+        print("ID del perro seleccionado: ${perroId} y ID del criador: ${combinedData['perro']['userId']}");
         // Pasar los datos combinados a la siguiente pantalla
         widget.onPerroSelected(combinedData);
       } else {

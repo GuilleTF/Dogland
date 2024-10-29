@@ -1,4 +1,5 @@
 // screens/perros/perro_screen.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:dogland/widgets/image_carousel.dart';
@@ -7,6 +8,8 @@ import 'package:dogland/widgets/action_icons.dart';
 import 'package:dogland/widgets/map_view.dart';
 import 'package:dogland/widgets/share_options.dart';
 import 'package:dogland/services/favorites_service.dart';
+import 'package:dogland/screens/mensajes/chat_screen.dart';
+import 'package:dogland/services/chat_service.dart';
 
 class PerroScreen extends StatefulWidget {
   final String perroId;
@@ -21,6 +24,10 @@ class PerroScreen extends StatefulWidget {
   final String criadorCorreo;
   final LatLng ubicacionCriador;
   final String perfilImagenCriadorUrl;
+  final String userId;
+
+
+  final ChatService _chatService = ChatService();
 
   PerroScreen({
     required this.perroId,
@@ -35,6 +42,7 @@ class PerroScreen extends StatefulWidget {
     required this.criadorCorreo,
     required this.ubicacionCriador,
     required this.perfilImagenCriadorUrl,
+    required this.userId,
   });
 
   @override
@@ -151,7 +159,39 @@ class _PerroScreenState extends State<PerroScreen> {
             const SizedBox(height: 20),
             ActionIcons(
               onShare: () => _showShareOptions(context, perroUrl),
-              onChat: () {},
+              onChat: () async {
+                final userId = FirebaseAuth.instance.currentUser!.uid;
+                print("Valor de widget.userId antes de abrir el chat: ${widget.userId}");
+
+                try {
+                  final chatId = await widget._chatService.getOrCreateChat(userId, widget.userId);
+
+                  // Verifica si chatId no es nulo antes de navegar
+                  if (chatId != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          chatId: chatId,
+                          userId: userId,
+                          recipientId: widget.userId,
+                        ),
+                      ),
+                    );
+                  } else {
+                    print("Error: chatId es nulo.");
+                    // Muestra un mensaje de error o toma alguna acción
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("No se pudo iniciar el chat. Intenta de nuevo.")),
+                    );
+                  }
+                } catch (e) {
+                  print("Error al obtener el chat: $e");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Hubo un problema al obtener el chat. Intenta de nuevo.")),
+                  );
+                }
+              },
               isFavorite: isFavorite,
               onFavoriteToggle: _toggleFavorite,
             ),
