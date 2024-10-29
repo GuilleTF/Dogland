@@ -79,8 +79,12 @@ class _ChatScreenState extends State<ChatScreen> {
       // Actualizar el último mensaje en el documento del chat
       await FirebaseFirestore.instance.collection('chats').doc(widget.chatId).update({
         'lastMessage': text,
+        'timestamp': FieldValue.serverTimestamp(),
       });
 
+      final updatedChat = await FirebaseFirestore.instance.collection('chats').doc(widget.chatId).get();
+      print("Estado del chat después de enviar el mensaje: ${updatedChat.data()}");
+      
       _controller.clear(); // Limpiar el campo de texto después de enviar
 
     } catch (e) {
