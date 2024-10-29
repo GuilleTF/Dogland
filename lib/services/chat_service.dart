@@ -23,6 +23,8 @@ class ChatService {
         'lastMessage': '',
         'timestamp': FieldValue.serverTimestamp(),
       });
+      print("Chat con usuarios: ${chatDoc}");
+
       return chatDoc.id;
     } catch (e) {
       print("Error al crear o encontrar el chat: $e");

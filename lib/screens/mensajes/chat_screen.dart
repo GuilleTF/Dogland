@@ -1,25 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends StatefulWidget {
   final String chatId;
   final String userId;
   final String recipientId;
 
   ChatScreen({required this.chatId, required this.userId, required this.recipientId});
 
-  final _controller = TextEditingController();
+  @override
+  _ChatScreenState createState() => _ChatScreenState();
+}
 
-  void _sendMessage(String text) async {
+class _ChatScreenState extends State<ChatScreen> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    printUserUID(); // Llama a la función al inicio para ver el UID del usuario
+  }
+
+  void printUserUID() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      print("UID del usuario autenticado: ${user.uid}");
+    } else {
+      print("Ningún usuario autenticado.");
+    }
+  }
+
+  /// Función para imprimir los datos del chat desde Firestore
+  Future<void> printChatDocument(String chatId) async {
+    try {
+      final chatDoc = await FirebaseFirestore.instance.collection('chats').doc(chatId).get();
+      if (chatDoc.exists) {
+        print("Datos del chat:");
+        print(chatDoc.data());  // Imprime los datos completos del documento de chat
+        final users = chatDoc.data()?['users'] as List<dynamic>?;
+        if (users != null) {
+          print("Usuarios en el chat: ${users.join(', ')}");
+        } else {
+          print("El array 'users' no existe en el documento de chat.");
+        }
+      } else {
+        print("No se encontró el documento de chat con el ID: $chatId");
+      }
+    } catch (e) {
+      print("Error al obtener el documento de chat: $e");
+    }
+  }
+
+  Future<void> _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
 
-    FirebaseFirestore.instance.collection('chats/$chatId/messages').add({
-      'text': text,
-      'senderId': userId,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-    _controller.clear();
+    try {
+      // Llama a printChatDocument para ver el contenido del chat antes de enviar el mensaje
+      await printChatDocument(widget.chatId);
+
+      // Intenta enviar el mensaje
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatId)
+          .collection('messages')
+          .add({
+        'text': text,
+        'senderId': widget.userId,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      _controller.clear(); // Limpiar el campo de texto después de enviar
+    } catch (e) {
+      print("Error al enviar mensaje: $e");
+    }
   }
 
   @override
@@ -31,7 +85,7 @@ class ChatScreen extends StatelessWidget {
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
-                  .collection('chats/$chatId/messages')
+                  .collection('chats/${widget.chatId}/messages')
                   .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
@@ -42,7 +96,7 @@ class ChatScreen extends StatelessWidget {
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
-                    final isMe = message['senderId'] == userId;
+                    final isMe = message['senderId'] == widget.userId;
                     return ChatBubble(
                       clipper: ChatBubbleClipper5(type: isMe ? BubbleType.sendBubble : BubbleType.receiverBubble),
                       alignment: isMe ? Alignment.topRight : Alignment.topLeft,
