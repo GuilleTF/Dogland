@@ -96,6 +96,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.purple,
         title: FutureBuilder<Map<String, dynamic>?>(
           future: getRecipientInfo(),
           builder: (context, snapshot) {
@@ -106,20 +107,27 @@ class _ChatScreenState extends State<ChatScreen> {
             final profileImageUrl = recipientInfo['profileImage'];
             final userName = recipientInfo['username'] ?? 'Usuario';
 
-            return Row(
-              children: [
-                CircleAvatar(
-                  backgroundImage: profileImageUrl != null
-                      ? NetworkImage(profileImageUrl)
-                      : null,
-                  child: profileImageUrl == null ? Icon(Icons.person) : null,
-                ),
-                SizedBox(width: 10),
-                Text(userName),
-              ],
+            return Center(
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 23,
+                    backgroundImage: profileImageUrl != null
+                        ? NetworkImage(profileImageUrl)
+                        : null,
+                    child: profileImageUrl == null ? Icon(Icons.person) : null,
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    userName,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
             );
           },
         ),
+        centerTitle: true,
       ),
       body: Column(
         children: [

@@ -47,26 +47,47 @@ class ChatsListScreen extends StatelessWidget {
                   final profileImageUrl = userInfo['profileImage'];
                   final userName = userInfo['username'] ?? 'Usuario';
 
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: profileImageUrl != null
-                          ? NetworkImage(profileImageUrl)
-                          : AssetImage("assets/placeholder.png") as ImageProvider,
-                    ),
-                    title: Text(userName),
-                    subtitle: Text(lastMessage, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatScreen(
-                            chatId: chat.id,
-                            userId: userId,
-                            recipientId: recipientId,
-                          ),
+                  return Container(
+                    margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: Offset(0, 3),
                         ),
-                      );
-                    },
+                      ],
+                    ),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        radius: 30,
+                         backgroundImage: profileImageUrl != null
+                            ? NetworkImage(profileImageUrl as String)  // Explicitly cast to String
+                            : null,
+                        child: profileImageUrl == null
+                            ? Icon(Icons.person, size: 30, color: Colors.grey)
+                            : null,
+                      ),
+                      title: Text(userName, style: TextStyle(color: Colors.black)),
+                      subtitle: Text(lastMessage, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatScreen(
+                              chatId: chat.id,
+                              userId: userId,
+                              recipientId: recipientId,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   );
                 },
               );
