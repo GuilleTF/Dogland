@@ -23,6 +23,11 @@ class _ChatScreenState extends State<ChatScreen> {
     printUserUID(); // Llama a la función al inicio para ver el UID del usuario
   }
 
+  Future<Map<String, dynamic>?> getRecipientInfo() async {
+    final recipientDoc = await FirebaseFirestore.instance.collection('users').doc(widget.recipientId).get();
+    return recipientDoc.exists ? recipientDoc.data() : null;
+  }
+
   void printUserUID() {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -70,7 +75,14 @@ class _ChatScreenState extends State<ChatScreen> {
         'senderId': widget.userId,
         'timestamp': FieldValue.serverTimestamp(),
       });
+
+      // Actualizar el último mensaje en el documento del chat
+      await FirebaseFirestore.instance.collection('chats').doc(widget.chatId).update({
+        'lastMessage': text,
+      });
+
       _controller.clear(); // Limpiar el campo de texto después de enviar
+
     } catch (e) {
       print("Error al enviar mensaje: $e");
     }
@@ -79,7 +91,32 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Chat")),
+      appBar: AppBar(
+        title: FutureBuilder<Map<String, dynamic>?>(
+          future: getRecipientInfo(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Text("Cargando...");
+            }
+            final recipientInfo = snapshot.data!;
+            final profileImageUrl = recipientInfo['profileImage'];
+            final userName = recipientInfo['username'] ?? 'Usuario';
+
+            return Row(
+              children: [
+                CircleAvatar(
+                  backgroundImage: profileImageUrl != null
+                      ? NetworkImage(profileImageUrl)
+                      : null,
+                  child: profileImageUrl == null ? Icon(Icons.person) : null,
+                ),
+                SizedBox(width: 10),
+                Text(userName),
+              ],
+            );
+          },
+        ),
+      ),
       body: Column(
         children: [
           Expanded(
