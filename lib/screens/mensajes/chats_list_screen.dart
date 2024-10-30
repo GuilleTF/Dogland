@@ -44,15 +44,19 @@ class ChatsListScreen extends StatelessWidget {
               final lastMessage = (chat.data() as Map<String, dynamic>).containsKey('lastMessage')
                   ? chat['lastMessage']
                   : '';
-              final timestamp = (chat['timestamp'] as Timestamp).toDate();
+              final timestamp = chat['timestamp'] != null
+                  ? (chat['timestamp'] as Timestamp).toDate()
+                  : DateTime.now();
 
               //Verifica si hay mensajes no leidos
               final lastReadTimestamp = (chat.data() as Map<String, dynamic>)
                   .containsKey('lastReadTimestamp') &&
                   (chat['lastReadTimestamp'] as Map<String, dynamic>).containsKey(userId)
-                  ? (chat['lastReadTimestamp'][userId] as Timestamp).toDate()
+                  ? (chat['lastReadTimestamp'][userId] as Timestamp?)?.toDate()
                   : null;
-              final hasUnreadMessages = lastReadTimestamp == null || timestamp.isAfter(lastReadTimestamp);
+
+              final hasUnreadMessages = 
+                  lastReadTimestamp == null || timestamp.isAfter(lastReadTimestamp);
 
               return FutureBuilder<Map<String, dynamic>?>(
                 future: getUserInfo(recipientId),
