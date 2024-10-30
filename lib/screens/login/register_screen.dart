@@ -20,6 +20,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final FocusNode _phoneFocusNode = FocusNode();
   LatLng? _locationCoordinates;
   String? _selectedRole = 'Usuario'; // Preseleccionado
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   Future<void> _registerUser() async {
     // Guarda y valida el formulario completo
@@ -187,8 +189,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Contraseña',
                     labelStyle: TextStyle(color: Colors.white),
+                    suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
                   ),
-                  obscureText: true,
+                  obscureText: !_isPasswordVisible,
                   validator: FormBuilderValidators.required(),
                 ),
                 FormBuilderTextField(
@@ -197,8 +210,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Confirmar Contraseña',
                     labelStyle: TextStyle(color: Colors.white),
+                    suffixIcon: IconButton(
+                        icon: Icon(
+                          _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                          });
+                        },
+                      ),
                   ),
-                  obscureText: true,
+                  obscureText: !_isConfirmPasswordVisible,
                   validator: FormBuilderValidators.compose([
                     FormBuilderValidators.required(),
                     (val) {

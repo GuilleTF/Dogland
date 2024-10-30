@@ -8,8 +8,14 @@ import '../home_screen.dart';
 import '../../utils/colors_utils.dart';
 import 'legal_info_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
+  bool _isPasswordVisible = false;
 
   Future<void> _loginUser(BuildContext context) async {
     if (_formKey.currentState?.saveAndValidate() ?? false) {
@@ -34,14 +40,14 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true, // Evita el solapamiento del teclado
+      resizeToAvoidBottomInset: true,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
               hexStringToColor("CB2B93"),
               hexStringToColor("9546C4"),
-              hexStringToColor("5E61F4")
+              hexStringToColor("5E61F4"),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -53,7 +59,7 @@ class LoginScreen extends StatelessWidget {
             child: FormBuilder(
               key: _formKey,
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Evita que el contenido se extienda al fondo
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset(
                     'assets/images/dogland_logo.png',
@@ -74,12 +80,23 @@ class LoginScreen extends StatelessWidget {
                   ),
                   FormBuilderTextField(
                     name: 'password',
+                    obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
                       labelText: 'Contraseña',
                       labelStyle: TextStyle(color: Colors.white),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
                     ),
                     style: TextStyle(color: Colors.white),
-                    obscureText: true,
                     validator: FormBuilderValidators.required(),
                   ),
                   SizedBox(height: 20),
