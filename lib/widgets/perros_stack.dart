@@ -41,6 +41,7 @@ class PerrosStack extends StatelessWidget {
               selectedPerroData!['criador']['location']?.longitude ?? 0,
             ),
             perfilImagenCriadorUrl: selectedPerroData!['criador']['profileImage'] ?? '',
+            userId: selectedPerroData!['perro']['userId'] ?? '',
           ),
       ],
     );
