@@ -23,6 +23,11 @@ class FavoritesScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             final favoritos = snapshot.data!;
+
+            if (favoritos.isEmpty) {
+              return Center(child: Text("No tienes favoritos todavía"));
+            }
+
             return ListView.builder(
               itemCount: favoritos.length,
               itemBuilder: (context, index) {
