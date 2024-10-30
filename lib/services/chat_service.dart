@@ -22,6 +22,7 @@ class ChatService {
         'users': [userId, recipientId],
         'lastMessage': '',
         'timestamp': FieldValue.serverTimestamp(),
+        'lastReadTimestamp': {userId: FieldValue.serverTimestamp(), recipientId: FieldValue.serverTimestamp()},
       });
       print("Chat con usuarios: ${chatDoc}");
 

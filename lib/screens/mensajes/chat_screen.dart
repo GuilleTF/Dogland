@@ -21,6 +21,9 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     printUserUID(); // Llama a la función al inicio para ver el UID del usuario
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      FocusScope.of(context).unfocus();
+    });
   }
 
   Future<Map<String, dynamic>?> getRecipientInfo() async {
@@ -127,6 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
             );
           },
         ),
+        iconTheme: IconThemeData(color: Colors.white),
         centerTitle: true,
       ),
       body: Column(

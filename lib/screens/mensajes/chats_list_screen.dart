@@ -36,6 +36,15 @@ class ChatsListScreen extends StatelessWidget {
               final lastMessage = (chat.data() as Map<String, dynamic>).containsKey('lastMessage')
                   ? chat['lastMessage']
                   : '';
+              final timestamp = (chat['timestamp'] as Timestamp).toDate();
+
+              //Verifica si hay mensajes no leidos
+              final lastReadTimestamp = (chat.data() as Map<String, dynamic>)
+                  .containsKey('lastReadTimestamp') &&
+                  (chat['lastReadTimestamp'] as Map<String, dynamic>).containsKey(userId)
+                  ? (chat['lastReadTimestamp'][userId] as Timestamp).toDate()
+                  : null;
+              final hasUnreadMessages = lastReadTimestamp == null || timestamp.isAfter(lastReadTimestamp);
 
               return FutureBuilder<Map<String, dynamic>?>(
                 future: getUserInfo(recipientId),
@@ -67,15 +76,37 @@ class ChatsListScreen extends StatelessWidget {
                       leading: CircleAvatar(
                         radius: 30,
                          backgroundImage: profileImageUrl != null
-                            ? NetworkImage(profileImageUrl as String)  // Explicitly cast to String
+                            ? NetworkImage(profileImageUrl as String)
                             : null,
                         child: profileImageUrl == null
                             ? Icon(Icons.person, size: 30, color: Colors.grey)
                             : null,
                       ),
                       title: Text(userName, style: TextStyle(color: Colors.black)),
-                      subtitle: Text(lastMessage, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      subtitle: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              lastMessage,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            "${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}",
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          )
+                        ],
+                      ),
+                      trailing: hasUnreadMessages
+                          ? Icon(Icons.circle, color: Colors.blue, size: 10)
+                          : null,
                       onTap: () {
+                        FocusScope.of(context).unfocus();  // Oculta el teclado
+                        FirebaseFirestore.instance.collection('chats').doc(chat.id).update({
+                          'lastReadTimestamp.$userId': FieldValue.serverTimestamp(),
+                        });
                         Navigator.push(
                           context,
                           MaterialPageRoute(
