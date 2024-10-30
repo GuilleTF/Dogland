@@ -24,6 +24,7 @@ class PerrosStack extends StatelessWidget {
         PerrosScreen(onPerroSelected: onPerroSelected),
         if (selectedPerroData != null)
           PerroScreen(
+            perroId: selectedPerroData!['perroId'] ?? '',
             raza: selectedPerroData!['perro']['raza'] ?? 'Raza no disponible',
             descripcion: selectedPerroData!['perro']['descripcion'] ?? 'Sin descripción',
             imagenes: List<String>.from(selectedPerroData!['perro']['images'] ?? []),
@@ -40,6 +41,7 @@ class PerrosStack extends StatelessWidget {
               selectedPerroData!['criador']['location']?.longitude ?? 0,
             ),
             perfilImagenCriadorUrl: selectedPerroData!['criador']['profileImage'] ?? '',
+            userId: selectedPerroData!['perro']['userId'] ?? '',
           ),
       ],
     );

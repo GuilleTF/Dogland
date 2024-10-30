@@ -1,5 +1,6 @@
 // home_screen.dart
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dogland/widgets/home_app_bar.dart';
@@ -11,7 +12,8 @@ import 'package:dogland/screens/login/login_screen.dart';
 import 'package:dogland/screens/perros/mis_perros_screen.dart';
 import 'package:dogland/screens/perros/perro_form_screen.dart';
 import 'package:dogland/widgets/perros_stack.dart';
-
+import 'package:dogland/screens/favorites_screen.dart';
+import 'package:dogland/screens/mensajes/chats_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -33,6 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedIndex = index;
       _misPerrosIndex = null;
+      _comerciosIndex = 0;
+      _perrosIndex = 0;
     });
   }
 
@@ -154,7 +158,13 @@ class _HomeScreenState extends State<HomeScreen> {
             _goBackToInicio();
           }
         },
-        showBackButton: _misPerrosIndex == 1 || _misPerrosIndex == agregarPerroIndex || _misPerrosIndex == editarPerroIndex || _comerciosIndex == 1 || _selectedIndex == 4 || _perrosIndex == 1 || _selectedIndex == 5,
+        showBackButton: _misPerrosIndex == 1 || 
+          _misPerrosIndex == agregarPerroIndex ||
+          _misPerrosIndex == editarPerroIndex ||
+            _comerciosIndex == 1 ||
+            _selectedIndex == 4 ||
+              _perrosIndex == 1 ||
+              _selectedIndex == 5,
       ),
       body: IndexedStack(
         index: _misPerrosIndex != null ? 6 : _selectedIndex,
@@ -163,8 +173,36 @@ class _HomeScreenState extends State<HomeScreen> {
             onComerciosTapped: () => _onItemTapped(4),
             onPerrosTapped: () => _onItemTapped(5),
           ),
-          Container(color: Colors.red), // Placeholder for Favoritos
-          Container(color: Colors.blue), // Placeholder for Mensajes
+          FavoritesScreen(
+            onPerroSelected: (perroData) async {
+              // Obtenemos los datos del criador para el perro seleccionado
+              final criadorSnapshot = await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(perroData['criador'])
+                  .get();
+              
+              if (criadorSnapshot.exists) {
+                final criadorData = criadorSnapshot.data() as Map<String, dynamic>;
+                setState(() {
+                  _selectedPerroData = {
+                    'perroId': perroData['perroId'],
+                    'perro': perroData['perro'],
+                    'criador': criadorData,
+                  };
+                  _perrosIndex = 1;
+                  _selectedIndex = 5;  // Cambia a la pantalla de Perros
+                });
+              }
+            },
+            onComercioSelected: (comercioData) {
+              setState(() {
+                _selectedComercioData = comercioData;
+                _comerciosIndex = 1;
+                _selectedIndex = 4;  // Cambia a la pantalla de Comercios
+              });
+            },
+          ),
+          ChatsListScreen(userId: FirebaseAuth.instance.currentUser!.uid),
           PerfilScreen(onMisPerrosTapped: _goToMisPerros),
           ComerciosStack(
             comerciosIndex: _comerciosIndex,
