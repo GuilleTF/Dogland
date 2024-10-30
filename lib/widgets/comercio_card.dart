@@ -19,8 +19,8 @@ class ComercioCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        elevation: 5,
-        margin: const EdgeInsets.symmetric(vertical: 12.0),
+        elevation: 4,
+        margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
@@ -31,8 +31,8 @@ class ComercioCard extends StatelessWidget {
             children: [
               // Imagen o ícono predeterminado
               Container(
-                width: 100,
-                height: 100,
+                width: 95,
+                height: 95,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12.0),
                   color: Colors.grey[200],
@@ -43,17 +43,17 @@ class ComercioCard extends StatelessWidget {
                         child: Image.network(
                           imagen!,
                           fit: BoxFit.cover,
-                          width: 100,
-                          height: 100,
+                          width: 95,
+                          height: 95,
                         ),
                       )
                     : Icon(
                         Icons.store,
-                        size: 50,
+                        size: 80,
                         color: Colors.grey[600],
                       ),
               ),
-              const SizedBox(width: 15),
+              const SizedBox(width: 16.0),
               // Título y descripción
               Expanded(
                 child: Column(
@@ -62,14 +62,14 @@ class ComercioCard extends StatelessWidget {
                     Text(
                       titulo.isNotEmpty ? titulo : 'Nombre no disponible',
                       style: const TextStyle(
-                        fontSize: 18.0,
+                        fontSize: 20.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       descripcion.isNotEmpty ? descripcion : 'Sin descripción',
-                      style: const TextStyle(fontSize: 14.0, color: Colors.black54),
+                      style: const TextStyle(fontSize: 16.0, color: Colors.black54),
                     ),
                   ],
                 ),
