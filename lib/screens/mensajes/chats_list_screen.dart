@@ -7,6 +7,14 @@ class ChatsListScreen extends StatelessWidget {
 
   ChatsListScreen({required this.userId});
 
+  Future<void> _deleteChat(String chatId) async {
+    try {
+      await FirebaseFirestore.instance.collection('chats').doc(chatId).delete();
+    } catch (e) {
+      print("Error al eliminar el chat: $e");
+    }
+  }
+
   Future<Map<String, dynamic>?> getUserInfo(String userId) async {
     final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
     return userDoc.exists ? userDoc.data() : null;
@@ -56,7 +64,33 @@ class ChatsListScreen extends StatelessWidget {
                   final profileImageUrl = userInfo['profileImage'];
                   final userName = userInfo['username'] ?? 'Usuario';
 
-                  return Container(
+                  return GestureDetector(
+                    onLongPress: () async {
+                      final confirmDelete = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text("Eliminar chat"),
+                            content: Text("¿Seguro que quieres eliminar esta conversación?"),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: Text("Cancelar"),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(true),
+                                child: Text("Eliminar"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (confirmDelete == true) {
+                        await _deleteChat(chat.id);
+                      }
+                    },
+                  child: Container(
                     margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
@@ -114,10 +148,11 @@ class ChatsListScreen extends StatelessWidget {
                               chatId: chat.id,
                               userId: userId,
                               recipientId: recipientId,
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   );
                 },

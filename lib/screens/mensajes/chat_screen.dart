@@ -16,10 +16,12 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
+  bool _hasSentMessage = false;
 
   @override
   void initState() {
     super.initState();
+    _hasSentMessage = false;
     printUserUID(); // Llama a la función al inicio para ver el UID del usuario
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       FocusScope.of(context).unfocus();
@@ -88,12 +90,38 @@ class _ChatScreenState extends State<ChatScreen> {
       final updatedChat = await FirebaseFirestore.instance.collection('chats').doc(widget.chatId).get();
       print("Estado del chat después de enviar el mensaje: ${updatedChat.data()}");
       
+      setState(() {
+        _hasSentMessage = true;
+      });
+
       _controller.clear(); // Limpiar el campo de texto después de enviar
 
     } catch (e) {
       print("Error al enviar mensaje: $e");
     }
   }
+
+  // Este método se llama cuando se cierra la pantalla
+  @override
+  void dispose() {
+    _deleteChatIfNoMessages(); // Llamada para eliminar el chat si está vacío
+    super.dispose();
+  }
+
+  Future<void> _deleteChatIfNoMessages() async {
+    if (!_hasSentMessage) {
+      final messageSnapshot = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatId)
+          .collection('messages')
+          .get();
+
+      if (messageSnapshot.docs.isEmpty) {
+        await FirebaseFirestore.instance.collection('chats').doc(widget.chatId).delete();
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
