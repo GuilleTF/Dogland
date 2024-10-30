@@ -134,10 +134,12 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
                                       .toLowerCase()
                                       .contains(textEditingValue.text.toLowerCase()));
                                 },
+                                initialValue: TextEditingValue(text: widget.perro?['raza'] ?? ''),
                                 onSelected: (String raza) {
                                   field.didChange(raza); // Notificar al FormBuilder
                                 },
                                 fieldViewBuilder: (BuildContext context, TextEditingController textEditingController, FocusNode focusNode, VoidCallback onFieldSubmitted) {
+                                  textEditingController.text = widget.perro?['raza'] ?? '';
                                   return TextField(
                                     controller: textEditingController,
                                     focusNode: focusNode,

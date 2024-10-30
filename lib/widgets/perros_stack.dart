@@ -18,11 +18,14 @@ class PerrosStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final perroData = selectedPerroData?['perro'] as Map<String, dynamic>?;
+    final criadorData = selectedPerroData?['criador'] as Map<String, dynamic>?;
+
     return IndexedStack(
       index: perrosIndex,
       children: [
         PerrosScreen(onPerroSelected: onPerroSelected),
-        if (selectedPerroData != null)
+        if (perroData != null && criadorData != null)
           PerroScreen(
             perroId: selectedPerroData!['perroId'] ?? '',
             raza: selectedPerroData!['perro']['raza'] ?? 'Raza no disponible',
