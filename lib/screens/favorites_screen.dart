@@ -51,15 +51,24 @@ class FavoritesScreen extends StatelessWidget {
                       return ListTile(title: Text('Elemento no encontrado'));
                     }
 
+                    // Obtener la distancia en double o asignar un texto adecuado si no está disponible
+                    final double distance = favorito['distance'] != null
+                        ? favorito['distance'] as double
+                        : 0.0;
+                    
+                    final String distanceText = distance != 0.0 
+                        ? "${(distance / 1000).toStringAsFixed(1)} km de distancia"
+                        : "Distancia no disponible";
+
                     return itemType == 'perro'
                         ? PerroCard(
                             perro: itemData,
                             onTap: () => onPerroSelected({
                               'perroId': itemId,
                               'perro': itemData,
-                              'criador': itemData['userId'], // ID del usuario/criador
+                              'criador': itemData['userId'],
                             }),
-                            showActions: false
+                            showActions: false,
                           )
                         : ComercioCard(
                             titulo: itemData['username'] ?? 'Sin Nombre',
@@ -68,6 +77,7 @@ class FavoritesScreen extends StatelessWidget {
                                     itemData['businessImages'].isNotEmpty
                                 ? itemData['businessImages'][0]
                                 : itemData['profileImage'],
+                            distance: distanceText, // Convertir en String para mostrar
                             onTap: () => onComercioSelected({
                               'comercioId': itemId,
                               ...itemData,

@@ -13,7 +13,7 @@ class HomeContent extends StatelessWidget {
     return Center(
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 12.0),
-        padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 10.0), // Ajuste para hacer la caja más alta
+        padding: EdgeInsets.symmetric(vertical: 60.0, horizontal: 10.0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15.0),
@@ -29,21 +29,21 @@ class HomeContent extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(height: 10), // Espacio adicional para mover el texto hacia arriba
+            SizedBox(height: 10),
             Text(
               "¿Qué busco?", 
-              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 40),
             ),
-            const SizedBox(height: 30), // Ajuste del espacio bajo el texto
+            const SizedBox(height: 30),
 
             GestureDetector(
               onTap: onComerciosTapped,
-              child: _buildSectionTile(Icons.store, 'Comercios', height: 200), // Ajuste para aumentar la altura de los botones
+              child: _buildSectionTile(Icons.store, 'Comercios', height: 200),
             ),
-            const SizedBox(height: 20), // Espacio entre botones
+            const SizedBox(height: 20),
             GestureDetector(
               onTap: onPerrosTapped,
-              child: _buildSectionTile(Icons.pets, 'Perros', height: 200), // Ajuste de altura para el botón Perros
+              child: _buildSectionTile(Icons.pets, 'Perros', height: 200),
             ),
           ],
         ),

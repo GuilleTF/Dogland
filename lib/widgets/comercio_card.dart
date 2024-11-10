@@ -1,15 +1,18 @@
+// widgets/comercio_card.dart
 import 'package:flutter/material.dart';
 
 class ComercioCard extends StatelessWidget {
   final String titulo;
   final String descripcion;
-  final String? imagen; // Acepta null para manejar la imagen
+  final String? imagen;
+  final String distance; // Asegúrate de que sea String
   final VoidCallback onTap;
 
   const ComercioCard({
     Key? key,
     required this.titulo,
     required this.descripcion,
+    required this.distance, // Recibe el texto de distancia
     this.imagen,
     required this.onTap,
   }) : super(key: key);
@@ -29,7 +32,6 @@ class ComercioCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Imagen o ícono predeterminado
               Container(
                 width: 95,
                 height: 95,
@@ -54,22 +56,23 @@ class ComercioCard extends StatelessWidget {
                       ),
               ),
               const SizedBox(width: 16.0),
-              // Título y descripción
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      titulo.isNotEmpty ? titulo : 'Nombre no disponible',
-                      style: const TextStyle(
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      titulo,
+                      style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      descripcion.isNotEmpty ? descripcion : 'Sin descripción',
+                      descripcion,
                       style: const TextStyle(fontSize: 16.0, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      distance,
+                      style: const TextStyle(fontSize: 14.0, color: Colors.black45),
                     ),
                   ],
                 ),

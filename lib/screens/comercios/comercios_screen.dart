@@ -1,7 +1,9 @@
+// screens/comercios_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dogland/widgets/comercio_card.dart';
 import 'package:dogland/widgets/custom_search_bar.dart';
+import 'package:dogland/services/location_based_service.dart';
 
 class ComerciosScreen extends StatefulWidget {
   final Function(Map<String, dynamic>) onComercioSelected;
@@ -13,14 +15,16 @@ class ComerciosScreen extends StatefulWidget {
 }
 
 class _ComerciosScreenState extends State<ComerciosScreen> {
-  TextEditingController _searchController = TextEditingController();
-  List<QueryDocumentSnapshot> _allComercios = [];
-  List<QueryDocumentSnapshot> _filteredComercios = [];
+  final TextEditingController _searchController = TextEditingController();
+  final LocationBasedService _locationBasedService = LocationBasedService();
+
+  List<Map<String, dynamic>> _nearbyComercios = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadComercios();
+    _loadNearbyComercios();
     _searchController.addListener(_filterComercios);
   }
 
@@ -31,27 +35,25 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
     super.dispose();
   }
 
-  void _loadComercios() {
-    FirebaseFirestore.instance
-        .collection('users')
-        .where('role', isEqualTo: 'Comercio')
-        .snapshots()
-        .listen((snapshot) {
+  void _loadNearbyComercios() async {
+    try {
+      List<Map<String, dynamic>> comercios = await _locationBasedService.getNearbyItems('Comercio');
       setState(() {
-        _allComercios = snapshot.docs;
-        _filteredComercios = _allComercios; // Inicialmente muestra todos
+        _nearbyComercios = comercios;
+        _isLoading = false;
       });
-    });
+    } catch (e) {
+      print("Error al cargar comercios cercanos: $e");
+    }
   }
 
   void _filterComercios() {
     String query = _searchController.text.toLowerCase();
 
     setState(() {
-      _filteredComercios = _allComercios.where((doc) {
-        var data = doc.data() as Map<String, dynamic>;
-        final titleMatch = (data['username'] ?? '').toLowerCase().contains(query);
-        final descriptionMatch = (data['description'] ?? '').toLowerCase().contains(query);
+      _nearbyComercios = _nearbyComercios.where((comercio) {
+        final titleMatch = (comercio['username'] ?? '').toLowerCase().contains(query);
+        final descriptionMatch = (comercio['description'] ?? '').toLowerCase().contains(query);
         return titleMatch || descriptionMatch;
       }).toList();
     });
@@ -65,41 +67,33 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
           CustomSearchBar(
             searchController: _searchController,
             onSearchChanged: (query) => _filterComercios(),
-            onLocationFilterPressed: () {
-              // Implementación de filtro de ubicación
-            },
-            razas: [],  // Vacío ya que no se usa en comercios
-            onRazaFilterChanged: (_) {},  // No hace nada
-            onSexoFilterChanged: (_) {},  // No hace nada
-            onPriceFilterChanged: (_) {}, // No hace nada
+            onLocationFilterPressed: _loadNearbyComercios,
+            razas: [], // No se usa en comercios
+            onRazaFilterChanged: (_) {},
+            onSexoFilterChanged: (_) {},
+            onPriceFilterChanged: (_) {},
             showFilters: false,
             showLocationFilter: true,
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _filteredComercios.length,
-              itemBuilder: (context, index) {
-                var comercioData = _filteredComercios[index].data() as Map<String, dynamic>;
-                var comercioId = _filteredComercios[index].id;
-                
-                // Determinar la imagen que se mostrará en la tarjeta (solo de businessImages)
-                String? imagen = comercioData['businessImages'] != null &&
-                        comercioData['businessImages'].isNotEmpty
-                    ? comercioData['businessImages'][0] // Primera imagen de businessImages
-                    : null; // Ninguna imagen de perfil, solo el ícono si no hay imágenes de negocio
+          _isLoading
+              ? Center(child: CircularProgressIndicator())
+              : Expanded(
+                  child: ListView.builder(
+                    itemCount: _nearbyComercios.length,
+                    itemBuilder: (context, index) {
+                      var comercio = _nearbyComercios[index];
+                      var distance = comercio['distance'];
 
-                return ComercioCard(
-                  titulo: comercioData['username'] ?? 'Nombre no disponible',
-                  descripcion: comercioData['description'] ?? 'Sin descripción',
-                  imagen: imagen, // Asigna la imagen determinada
-                  onTap: () => widget.onComercioSelected({
-                      'comercioId': comercioId,
-                      ...comercioData
-                    }),
-                );
-              },
-            ),
-          ),
+                      return ComercioCard(
+                        titulo: comercio['username'] ?? 'Sin Nombre',
+                        descripcion: comercio['description'] ?? 'Sin Descripción',
+                        imagen: comercio['businessImages']?.isNotEmpty == true ? comercio['businessImages'][0] : null,
+                        distance: distance != null ? "${(distance / 1000).toStringAsFixed(1)} km de distancia" : "Distancia no disponible",
+                        onTap: () => widget.onComercioSelected(comercio),
+                      );
+                    },
+                  ),
+                ),
         ],
       ),
     );
