@@ -1,3 +1,4 @@
+// screens/perros_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dogland/widgets/perro_card.dart';
@@ -20,7 +21,8 @@ class _PerrosScreenState extends State<PerrosScreen> {
 
   String? _selectedRaza;
   String? _selectedSexo;
-  RangeValues _priceRange = RangeValues(0, 1000);
+  int? _minPrice;
+  int? _maxPrice;
 
   @override
   void initState() {
@@ -64,7 +66,8 @@ class _PerrosScreenState extends State<PerrosScreen> {
 
         bool matchesRaza = _selectedRaza == null || data['raza'] == _selectedRaza;
         bool matchesSexo = _selectedSexo == null || data['genero'] == _selectedSexo;
-        bool matchesPrice = (data['precio'] >= _priceRange.start && data['precio'] <= _priceRange.end);
+        bool matchesPrice = (_minPrice == null || data['precio'] >= _minPrice!) &&
+                            (_maxPrice == null || data['precio'] <= _maxPrice!);
 
         return matchesSearch && matchesRaza && matchesSexo && matchesPrice;
       }).toList();
@@ -75,20 +78,17 @@ class _PerrosScreenState extends State<PerrosScreen> {
     String userId = perroData['userId'];
 
     try {
-      // Consultar los datos del criador desde la colección 'users'
       DocumentSnapshot criadorSnapshot = await FirebaseFirestore.instance.collection('users').doc(userId).get();
 
       if (criadorSnapshot.exists) {
         Map<String, dynamic> criadorData = criadorSnapshot.data() as Map<String, dynamic>;
 
-        // Combinar los datos del perro y del criador en un solo mapa
         Map<String, dynamic> combinedData = {
           'perroId': perroId,
           'perro': perroData,
           'criador': criadorData,
         };
-        print("ID del perro seleccionado: ${perroId} y ID del criador: ${combinedData['perro']['userId']}");
-        // Pasar los datos combinados a la siguiente pantalla
+        print("ID del perro seleccionado: $perroId y ID del criador: ${combinedData['perro']['userId']}");
         widget.onPerroSelected(combinedData);
       } else {
         print("No se encontró el criador con el ID: $userId");
@@ -122,13 +122,19 @@ class _PerrosScreenState extends State<PerrosScreen> {
               });
               _filterPerros();
             },
-            onPriceFilterChanged: (RangeValues range) {
+            onMinPriceChanged: (value) {
               setState(() {
-                _priceRange = range;
+                _minPrice = value;
               });
               _filterPerros();
             },
-            showFilters: true,  // Mostrar los filtros
+            onMaxPriceChanged: (value) {
+              setState(() {
+                _maxPrice = value;
+              });
+              _filterPerros();
+            },
+            showFilters: true,
             showLocationFilter: false,
           ),
           Expanded(
@@ -140,8 +146,8 @@ class _PerrosScreenState extends State<PerrosScreen> {
 
                 return PerroCard(
                   perro: perroData,
-                  onTap: () => _selectPerroWithCriadorData(perroData,perroId),
-                  showActions: false,  // No mostrar los botones de acción
+                  onTap: () => _selectPerroWithCriadorData(perroData, perroId),
+                  showActions: false,
                 );
               },
             ),

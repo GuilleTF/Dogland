@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dogland/widgets/comercio_card.dart';
-import 'package:dogland/widgets/custom_search_bar.dart';
 import 'package:dogland/services/location_based_service.dart';
 
 class ComerciosScreen extends StatefulWidget {
@@ -15,7 +14,6 @@ class ComerciosScreen extends StatefulWidget {
 }
 
 class _ComerciosScreenState extends State<ComerciosScreen> {
-  final TextEditingController _searchController = TextEditingController();
   final LocationBasedService _locationBasedService = LocationBasedService();
 
   List<Map<String, dynamic>> _nearbyComercios = [];
@@ -25,17 +23,10 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
   void initState() {
     super.initState();
     _loadNearbyComercios();
-    _searchController.addListener(_filterComercios);
-  }
-
-  @override
-  void dispose() {
-    _searchController.removeListener(_filterComercios);
-    _searchController.dispose();
-    super.dispose();
   }
 
   void _loadNearbyComercios() async {
+    setState(() => _isLoading = true);
     try {
       List<Map<String, dynamic>> comercios = await _locationBasedService.getNearbyItems('Comercio');
       setState(() {
@@ -44,19 +35,8 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
       });
     } catch (e) {
       print("Error al cargar comercios cercanos: $e");
+      setState(() => _isLoading = false);
     }
-  }
-
-  void _filterComercios() {
-    String query = _searchController.text.toLowerCase();
-
-    setState(() {
-      _nearbyComercios = _nearbyComercios.where((comercio) {
-        final titleMatch = (comercio['username'] ?? '').toLowerCase().contains(query);
-        final descriptionMatch = (comercio['description'] ?? '').toLowerCase().contains(query);
-        return titleMatch || descriptionMatch;
-      }).toList();
-    });
   }
 
   @override
@@ -64,16 +44,14 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
     return Scaffold(
       body: Column(
         children: [
-          CustomSearchBar(
-            searchController: _searchController,
-            onSearchChanged: (query) => _filterComercios(),
-            onLocationFilterPressed: _loadNearbyComercios,
-            razas: [], // No se usa en comercios
-            onRazaFilterChanged: (_) {},
-            onSexoFilterChanged: (_) {},
-            onPriceFilterChanged: (_) {},
-            showFilters: false,
-            showLocationFilter: true,
+          // Botón de filtro por ubicación
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton.icon(
+              icon: Icon(Icons.location_on),
+              label: Text('Filtrar por Ubicación'),
+              onPressed: _loadNearbyComercios,
+            ),
           ),
           _isLoading
               ? Center(child: CircularProgressIndicator())
@@ -83,7 +61,6 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
                     itemBuilder: (context, index) {
                       var comercio = _nearbyComercios[index];
                       var distance = comercio['distance'];
-
                       return ComercioCard(
                         titulo: comercio['username'] ?? 'Sin Nombre',
                         descripcion: comercio['description'] ?? 'Sin Descripción',
