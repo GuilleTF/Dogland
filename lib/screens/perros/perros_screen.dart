@@ -38,17 +38,35 @@ class _PerrosScreenState extends State<PerrosScreen> {
 
   void _loadCriadores() async {
     setState(() => _isLoading = true);
+
+    // Cargar los criadores
     FirebaseFirestore.instance
         .collection('users')
         .where('role', isEqualTo: 'Criador')
         .snapshots()
-        .listen((snapshot) {
+        .listen((snapshot) async {
+      List<Map<String, dynamic>> criadores = [];
+
+      // Obtener los datos de cada criador
+      for (var doc in snapshot.docs) {
+        var criadorData = doc.data() as Map<String, dynamic>;
+        criadorData['id'] = doc.id;
+
+        // Consultar los perros de cada criador usando el userId
+        var perrosSnapshot = await FirebaseFirestore.instance
+            .collection('perros')
+            .where('userId', isEqualTo: doc.id)
+            .get();
+
+        // Añadir los perros al criador
+        criadorData['perros'] = perrosSnapshot.docs.map((p) => p.data()).toList();
+
+        // Añadir a la lista de criadores
+        criadores.add(criadorData);
+      }
+
       setState(() {
-        _allCriadores = snapshot.docs.map((doc) {
-          var data = doc.data() as Map<String, dynamic>;
-          data['id'] = doc.id;
-          return data;
-        }).toList();
+        _allCriadores = criadores;
         _filteredCriadores = _allCriadores;
         _isLoading = false;
       });
@@ -76,14 +94,23 @@ class _PerrosScreenState extends State<PerrosScreen> {
     setState(() {
       _filteredCriadores = _allCriadores.where((criador) {
         bool matchesSearch = criador['username']?.toLowerCase().contains(query) ?? false;
-        bool matchesRaza = _selectedRaza == null || criador['perros'].any((p) => p['raza'] == _selectedRaza);
-        bool matchesSexo = _selectedSexo == null || criador['perros'].any((p) => p['genero'] == _selectedSexo);
-        bool matchesPrice = criador['perros'].any((p) =>
-            (_minPrice == null || p['precio'] >= _minPrice!) &&
-            (_maxPrice == null || p['precio'] <= _maxPrice!));
+
+        List<dynamic>? perros = criador['perros'] as List<dynamic>? ?? [];
+
+        bool matchesRaza = _selectedRaza == null || perros.any((p) => p['raza'] == _selectedRaza);
+        bool matchesSexo = _selectedSexo == null || perros.any((p) => p['genero'] == _selectedSexo);
+        bool matchesPrice = perros.any((p) =>
+          (_minPrice == null || p['precio'] >= _minPrice!) &&
+          (_maxPrice == null || p['precio'] <= _maxPrice!)
+        );
 
         return matchesSearch && matchesRaza && matchesSexo && matchesPrice;
       }).toList();
+
+      // Si se quitaron todos los filtros, mostrar todos los criadores
+      if (_selectedRaza == null && _selectedSexo == null && _minPrice == null && _maxPrice == null && query.isEmpty) {
+        _filteredCriadores = _allCriadores;
+      }
     });
   }
 
