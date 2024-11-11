@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 4:
         return 'Comercios';
       case 5:
-        return 'Perros';
+        return 'Criadores';
       default:
         return 'Inicio';
     }
