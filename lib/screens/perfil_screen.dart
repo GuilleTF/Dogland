@@ -1,7 +1,6 @@
 // perfil_screen.dart
 
 import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dogland/services/profile_service.dart';
 import 'package:dogland/services/image_service.dart';
@@ -11,6 +10,8 @@ import 'package:dogland/widgets/user_profile_widget.dart';
 import 'package:dogland/utils/profile_comparator.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:multi_select_flutter/multi_select_flutter.dart';
+import '../../data/tags.dart';
 import 'dart:io';
 
 class PerfilScreen extends StatefulWidget {
@@ -42,6 +43,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   LatLng? _locationCoordinates;
   bool _isLoading = false;
   String userRole = '';
+  List<String> _selectedTags = []; // Lista de etiquetas seleccionadas para comercio
 
   // Valores iniciales para comparaciones
   late String initialName;
@@ -56,55 +58,58 @@ class _PerfilScreenState extends State<PerfilScreen> {
     super.initState();
     _loadProfileData();
   }
-Future<void> _loadProfileData() async {
-  setState(() => _isLoading = true);
-  try {
-    DocumentSnapshot userData = await _profileService.getUserData();
-    final userDataMap = userData.data() as Map<String, dynamic>?;
 
-    if (userDataMap != null) {
-      _nameController.text = userDataMap['username'] ?? '';
-      _descriptionController.text = userDataMap['description'] ?? '';
-      _phoneController.text = userDataMap['phoneNumber'] ?? '';
-      _email = userDataMap['email'] ?? '';
-      userRole = userDataMap['role'] ?? '';
-      _profileImageUrl = userDataMap['profileImage'];
+  Future<void> _loadProfileData() async {
+    setState(() => _isLoading = true);
+    try {
+      DocumentSnapshot userData = await _profileService.getUserData();
+      final userDataMap = userData.data() as Map<String, dynamic>?;
 
-      if (userDataMap['location'] != null) {
-        GeoPoint geoPoint = userDataMap['location'];
-        _locationCoordinates = LatLng(geoPoint.latitude, geoPoint.longitude);
-        _locationController.text = await _locationService.getAddressFromLatLng(_locationCoordinates!);
-      } else {
-        _locationController.text = _location;
+      if (userDataMap != null) {
+        _nameController.text = userDataMap['username'] ?? '';
+        _descriptionController.text = userDataMap['description'] ?? '';
+        _phoneController.text = userDataMap['phoneNumber'] ?? '';
+        _email = userDataMap['email'] ?? '';
+        userRole = userDataMap['role'] ?? '';
+        _profileImageUrl = userDataMap['profileImage'];
+        
+        // Cargar etiquetas seleccionadas si es Comercio
+        if (userRole == 'Comercio' && userDataMap['tags'] != null) {
+          _selectedTags = List<String>.from(userDataMap['tags']);
+        }
+
+        if (userDataMap['location'] != null) {
+          GeoPoint geoPoint = userDataMap['location'];
+          _locationCoordinates = LatLng(geoPoint.latitude, geoPoint.longitude);
+          _locationController.text = await _locationService.getAddressFromLatLng(_locationCoordinates!);
+        } else {
+          _locationController.text = _location;
+        }
+
+        if (userDataMap['businessImages'] != null) {
+          _businessImages = await _imageService.loadImages(List<String>.from(userDataMap['businessImages']));
+        }
+
+        initialName = _nameController.text;
+        initialDescription = _descriptionController.text;
+        initialPhone = _phoneController.text;
+        initialLocationCoordinates = _locationCoordinates;
+        initialProfileImageUrl = _profileImageUrl;
+        initialBusinessImageUrls = List<String>.from(userDataMap['businessImages'] ?? []);
       }
-
-      if (userDataMap['businessImages'] != null) {
-        _businessImages = await _imageService.loadImages(List<String>.from(userDataMap['businessImages']));
-      }
-
-      // Inicializa las variables para comparar los cambios
-      initialName = _nameController.text;
-      initialDescription = _descriptionController.text;
-      initialPhone = _phoneController.text;
-      initialLocationCoordinates = _locationCoordinates;
-      initialProfileImageUrl = _profileImageUrl;
-      initialBusinessImageUrls = List<String>.from(userDataMap['businessImages'] ?? []);
+    } catch (e) {
+      print("Error al cargar los datos del perfil: $e");
+    } finally {
+      setState(() => _isLoading = false);
     }
-  } catch (e) {
-    print("Error al cargar los datos del perfil: $e");
-  } finally {
-    setState(() => _isLoading = false);
   }
-}
 
-
- @override
+  @override
   void dispose() {
     _locationController.dispose();
     _locationFocusNode.dispose();
     super.dispose();
   }
-
 
   Future<void> _saveProfile() async {
     final comparator = ProfileComparator(
@@ -155,6 +160,7 @@ Future<void> _loadProfileData() async {
         'email': _email,
         'profileImage': profileImageUrl,
         'businessImages': businessImageUrls,
+        'tags': userRole == 'Comercio' ? _selectedTags : null, // Actualiza etiquetas
       };
 
       await _profileService.updateProfileData(data);
@@ -187,90 +193,118 @@ Future<void> _loadProfileData() async {
     }
   }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    body: SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.3),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                // Imagen de perfil
-                GestureDetector(
-                  onTap: _pickProfileImage,
-                  child: CircleAvatar(
-                    radius: 60,
-                    backgroundImage: _profileImageFile != null
-                        ? FileImage(_profileImageFile!)
-                        : (_profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null),
-                    child: _profileImageFile == null && _profileImageUrl == null
-                        ? const Icon(Icons.add_a_photo, size: 50)
-                        : null,
-                  ),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.3),
+                  spreadRadius: 5,
+                  blurRadius: 7,
+                  offset: Offset(0, 3),
                 ),
-                const SizedBox(height: 20),
-
-                // Sección de imágenes del negocio
-                if (userRole == 'Comercio' || userRole == 'Criador')
-                  BusinessImagesSection(
-                    mobileImages: _businessImages,
-                    webImages: _businessImageBytes,
-                    onAddImage: _pickBusinessImage,
-                    onDeleteImage: (index) {
-                      setState(() {
-                        _businessImages.removeAt(index);
-                      });
-                    },
-                    role: userRole,
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: _pickProfileImage,
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundImage: _profileImageFile != null
+                          ? FileImage(_profileImageFile!)
+                          : (_profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null),
+                      child: _profileImageFile == null && _profileImageUrl == null
+                          ? const Icon(Icons.add_a_photo, size: 50)
+                          : null,
+                    ),
                   ),
-                const SizedBox(height: 20),
-                
-                if (userRole == 'Criador')
+                  const SizedBox(height: 20),
+
+                  if (userRole == 'Comercio' || userRole == 'Criador')
+                    BusinessImagesSection(
+                      mobileImages: _businessImages,
+                      webImages: _businessImageBytes,
+                      onAddImage: _pickBusinessImage,
+                      onDeleteImage: (index) {
+                        setState(() {
+                          _businessImages.removeAt(index);
+                        });
+                      },
+                      role: userRole,
+                    ),
+                  const SizedBox(height: 20),
+
+                  if (userRole == 'Comercio')
+                    MultiSelectDialogField(
+                      items: etiquetasDeComercio.map((tag) => MultiSelectItem(tag, tag)).toList(),
+                      title: Text(
+                        "Editar etiquetas",
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      selectedColor: Colors.blue,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                        border: Border.all(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      buttonText: Text(
+                        "Etiquetas",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                        ),
+                      ),
+                      onConfirm: (results) {
+                        setState(() {
+                          _selectedTags = results.cast<String>();
+                        });
+                      },
+                      initialValue: _selectedTags,
+                    ),
+                  const SizedBox(height: 20),
+
+                  if (userRole == 'Criador')
                     ElevatedButton(
                       onPressed: widget.onMisPerrosTapped,
                       child: Text('MIS PERROS'),
                     ),
-                  
-                const SizedBox(height: 20),
 
-                // Campos de usuario
-                UserProfileWidget(
-                  nameController: _nameController,
-                  descriptionController: _descriptionController,
-                  phoneController: _phoneController,
-                  locationController: _locationController,
-                  locationFocusNode: _locationFocusNode,
-                  onLocationSelected: (coordinates) {
-                    setState(() {
-                      _locationCoordinates = coordinates;
-                    });
-                  },
-                  onSave: _saveProfile,
-                  role: userRole,
-                  email: _email,
-                ),
-              ],
+                  const SizedBox(height: 20),
+
+                  UserProfileWidget(
+                    nameController: _nameController,
+                    descriptionController: _descriptionController,
+                    phoneController: _phoneController,
+                    locationController: _locationController,
+                    locationFocusNode: _locationFocusNode,
+                    onLocationSelected: (coordinates) {
+                      setState(() {
+                        _locationCoordinates = coordinates;
+                      });
+                    },
+                    onSave: _saveProfile,
+                    role: userRole,
+                    email: _email,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 }
