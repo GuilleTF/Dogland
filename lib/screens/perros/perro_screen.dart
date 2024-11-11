@@ -1,7 +1,6 @@
 // screens/perros/perro_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:dogland/widgets/image_carousel.dart';
 import 'package:dogland/widgets/contact_info.dart';
 import 'package:dogland/widgets/action_icons.dart';
@@ -18,12 +17,6 @@ class PerroScreen extends StatefulWidget {
   final List<String> imagenes;
   final String genero;
   final String precio;
-  final String criadorNombre;
-  final String criadorDescripcion;
-  final String criadorTelefono;
-  final String criadorCorreo;
-  final LatLng ubicacionCriador;
-  final String perfilImagenCriadorUrl;
   final String userId;
 
 
@@ -36,12 +29,6 @@ class PerroScreen extends StatefulWidget {
     required this.imagenes,
     required this.genero,
     required this.precio,
-    required this.criadorNombre,
-    required this.criadorDescripcion,
-    required this.criadorTelefono,
-    required this.criadorCorreo,
-    required this.ubicacionCriador,
-    required this.perfilImagenCriadorUrl,
     required this.userId,
   });
 
@@ -68,9 +55,9 @@ class _PerroScreenState extends State<PerroScreen> {
 
   void _toggleFavorite() async {
     if (widget.perroId.isEmpty) {
-    print("Error: perroId está vacío.");
-    return;
-  }
+      print("Error: perroId está vacío.");
+      return;
+    }
     await favoritesService.toggleFavorite(widget.perroId, 'perro');
     setState(() {
       isFavorite = !isFavorite;
@@ -101,59 +88,6 @@ class _PerroScreenState extends State<PerroScreen> {
                   const SizedBox(height: 10),
                   Text('Precio: ${widget.precio}€', style: TextStyle(fontSize: 16)),
                 ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircleAvatar(
-                            radius: 30,
-                            backgroundImage: widget.perfilImagenCriadorUrl.isNotEmpty
-                                ? NetworkImage(widget.perfilImagenCriadorUrl)
-                                : null,
-                            child: widget.perfilImagenCriadorUrl.isEmpty
-                                ? Icon(Icons.person, size: 30)
-                                : null,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              widget.criadorNombre,
-                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.left,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 15),
-                      Text(
-                        widget.criadorDescripcion,
-                        style: const TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -196,9 +130,6 @@ class _PerroScreenState extends State<PerroScreen> {
               onFavoriteToggle: _toggleFavorite,
             ),
             const SizedBox(height: 20),
-            ContactInfo(telefono: widget.criadorTelefono, correo: widget.criadorCorreo),
-            const SizedBox(height: 20),
-            MapView(location: widget.ubicacionCriador, markerId: 'ubicacionCriador'),
           ],
         ),
       ),

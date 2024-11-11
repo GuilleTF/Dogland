@@ -1,14 +1,14 @@
-// screens/perros_screen.dart
+// screens/perros/perros_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dogland/widgets/perro_card.dart';
 import 'package:dogland/widgets/custom_search_bar.dart';
-import 'package:dogland/data/razas.dart';  // Tu lista de razas
+import 'package:dogland/widgets/comercio_card.dart';
+import 'package:dogland/data/razas.dart';
 
 class PerrosScreen extends StatefulWidget {
-  final Function(Map<String, dynamic>) onPerroSelected;
+  final Function(Map<String, dynamic>) onCriadorSelected;
 
-  const PerrosScreen({Key? key, required this.onPerroSelected}) : super(key: key);
+  const PerrosScreen({Key? key, required this.onCriadorSelected}) : super(key: key);
 
   @override
   _PerrosScreenState createState() => _PerrosScreenState();
@@ -16,8 +16,8 @@ class PerrosScreen extends StatefulWidget {
 
 class _PerrosScreenState extends State<PerrosScreen> {
   TextEditingController _searchController = TextEditingController();
-  List<QueryDocumentSnapshot> _allPerros = [];
-  List<QueryDocumentSnapshot> _filteredPerros = [];
+  List<Map<String, dynamic>> _allCriadores = [];
+  List<Map<String, dynamic>> _filteredCriadores = [];
 
   String? _selectedRaza;
   String? _selectedSexo;
@@ -27,75 +27,43 @@ class _PerrosScreenState extends State<PerrosScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPerros();
-    _searchController.addListener(_filterPerros);
+    _loadCriadores();
+    _searchController.addListener(_filterCriadores);
   }
 
-  @override
-  void dispose() {
-    _searchController.removeListener(_filterPerros);
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _loadPerros() {
+  void _loadCriadores() {
     FirebaseFirestore.instance
-      .collection('perros')
+      .collection('users')
+      .where('role', isEqualTo: 'Criador')
       .snapshots()
       .listen((snapshot) {
         setState(() {
-          _allPerros = snapshot.docs.map((doc) {
+          _allCriadores = snapshot.docs.map((doc) {
             var data = doc.data() as Map<String, dynamic>;
-            data['id'] = doc.id; // Asigna el ID al mapa de datos del perro
-            return doc;
+            data['id'] = doc.id;
+            return data;
           }).toList();
-          _filteredPerros = _allPerros;
+          _filteredCriadores = _allCriadores;
         });
       });
   }
 
-  void _filterPerros() {
+  void _filterCriadores() {
     String query = _searchController.text.toLowerCase();
 
     setState(() {
-      _filteredPerros = _allPerros.where((doc) {
-        var data = doc.data() as Map<String, dynamic>;
-
-        bool matchesSearch = data['raza'].toLowerCase().contains(query) ||
-            data['descripcion'].toLowerCase().contains(query);
-
-        bool matchesRaza = _selectedRaza == null || data['raza'] == _selectedRaza;
-        bool matchesSexo = _selectedSexo == null || data['genero'] == _selectedSexo;
-        bool matchesPrice = (_minPrice == null || data['precio'] >= _minPrice!) &&
-                            (_maxPrice == null || data['precio'] <= _maxPrice!);
+      _filteredCriadores = _allCriadores.where((criador) {
+        bool matchesSearch = criador['username']?.toLowerCase().contains(query) ?? false;
+        bool matchesRaza = _selectedRaza == null || criador['perros'].any((p) => p['raza'] == _selectedRaza);
+        bool matchesSexo = _selectedSexo == null || criador['perros'].any((p) => p['genero'] == _selectedSexo);
+        bool matchesPrice = criador['perros'].any((p) =>
+          (_minPrice == null || p['precio'] >= _minPrice!) &&
+          (_maxPrice == null || p['precio'] <= _maxPrice!)
+        );
 
         return matchesSearch && matchesRaza && matchesSexo && matchesPrice;
       }).toList();
     });
-  }
-
-  Future<void> _selectPerroWithCriadorData(Map<String, dynamic> perroData, String perroId) async {
-    String userId = perroData['userId'];
-
-    try {
-      DocumentSnapshot criadorSnapshot = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-
-      if (criadorSnapshot.exists) {
-        Map<String, dynamic> criadorData = criadorSnapshot.data() as Map<String, dynamic>;
-
-        Map<String, dynamic> combinedData = {
-          'perroId': perroId,
-          'perro': perroData,
-          'criador': criadorData,
-        };
-        print("ID del perro seleccionado: $perroId y ID del criador: ${combinedData['perro']['userId']}");
-        widget.onPerroSelected(combinedData);
-      } else {
-        print("No se encontró el criador con el ID: $userId");
-      }
-    } catch (e) {
-      print("Error al obtener los datos del criador: $e");
-    }
   }
 
   @override
@@ -105,49 +73,40 @@ class _PerrosScreenState extends State<PerrosScreen> {
         children: [
           CustomSearchBar(
             searchController: _searchController,
-            onSearchChanged: (query) => _filterPerros(),
-            onLocationFilterPressed: () {
-              // Implementación de filtro de ubicación
-            },
-            razas: razasDePerros,  // Lista de razas de perros
+            onSearchChanged: (query) => _filterCriadores(),
+            onLocationFilterPressed: () {},  // Implementación futura
+            razas: razasDePerros,
             onRazaFilterChanged: (value) {
-              setState(() {
-                _selectedRaza = value;
-              });
-              _filterPerros();
+              setState(() => _selectedRaza = value);
+              _filterCriadores();
             },
             onSexoFilterChanged: (value) {
-              setState(() {
-                _selectedSexo = value;
-              });
-              _filterPerros();
+              setState(() => _selectedSexo = value);
+              _filterCriadores();
             },
             onMinPriceChanged: (value) {
-              setState(() {
-                _minPrice = value;
-              });
-              _filterPerros();
+              setState(() => _minPrice = value);
+              _filterCriadores();
             },
             onMaxPriceChanged: (value) {
-              setState(() {
-                _maxPrice = value;
-              });
-              _filterPerros();
+              setState(() => _maxPrice = value);
+              _filterCriadores();
             },
             showFilters: true,
-            showLocationFilter: false,
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: _filteredPerros.length,
+              itemCount: _filteredCriadores.length,
               itemBuilder: (context, index) {
-                var perroData = _filteredPerros[index].data() as Map<String, dynamic>;
-                var perroId = _filteredPerros[index].id;
-
-                return PerroCard(
-                  perro: perroData,
-                  onTap: () => _selectPerroWithCriadorData(perroData, perroId),
-                  showActions: false,
+                var criadorData = _filteredCriadores[index];
+                return ComercioCard(
+                  titulo: criadorData['username'] ?? 'Nombre no disponible',
+                  descripcion: criadorData['description'] ?? 'Descripción no disponible',
+                  imagen: (criadorData['businessImages'] != null && criadorData['businessImages'].isNotEmpty)
+                      ? criadorData['businessImages'][0]
+                      : null,
+                  distance: 'Distancia no disponible',
+                  onTap: () => widget.onCriadorSelected(criadorData),
                 );
               },
             ),

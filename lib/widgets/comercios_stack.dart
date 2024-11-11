@@ -1,5 +1,4 @@
 // widgets/comercios_stack.dart
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../screens/comercios/comercios_screen.dart';
@@ -20,13 +19,15 @@ class ComerciosStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("Contenido de selectedComercioData: $selectedComercioData");
+
     return IndexedStack(
       index: comerciosIndex,
       children: [
         ComerciosScreen(onComercioSelected: onComercioSelected),
-        if (selectedComercioData != null)
+        if (selectedComercioData != null && selectedComercioData!['comercioId'] != null)
           ComercioScreen(
-            comercioId: selectedComercioData!['comercioId'] ?? '',
+            comercioId: selectedComercioData!['comercioId'], // Se asegura de pasar comercioId
             nombre: selectedComercioData!['username'] ?? 'Nombre no disponible',
             descripcion: selectedComercioData!['description'] ?? 'Sin descripción',
             imagenes: List<String>.from(selectedComercioData!['businessImages'] ?? []),
@@ -39,7 +40,9 @@ class ComerciosStack extends StatelessWidget {
                   )
                 : LatLng(0, 0),
             perfilImagenUrl: selectedComercioData!['profileImage'] ?? '',
-          ),
+          )
+        else
+          Center(child: Text("Error: comercioId está vacío o selectedComercioData es null")),
       ],
     );
   }
