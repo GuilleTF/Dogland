@@ -9,11 +9,16 @@ class FavoritesScreen extends StatelessWidget {
   final FavoritesService favoritesService = FavoritesService();
   final Function(Map<String, dynamic>) onPerroSelected;
   final Function(Map<String, dynamic>) onComercioSelected;
-  
+
   FavoritesScreen({
     required this.onPerroSelected,
     required this.onComercioSelected,
   });
+
+  // Función para eliminar el favorito de la colección de favoritos
+  Future<void> _removeFavorite(String itemId) async {
+    await favoritesService.removeFavorite(itemId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,24 +46,17 @@ class FavoritesScreen extends StatelessWidget {
                       .doc(itemId)
                       .get(),
                   builder: (context, itemSnapshot) {
-                    if (!itemSnapshot.hasData) {
-                      return ListTile(title: Text('Cargando...'));
+                    if (itemSnapshot.connectionState == ConnectionState.waiting) {
+                      return SizedBox.shrink(); // Opcional: mostrar un loader temporal
                     }
 
-                    final itemData = itemSnapshot.data!.data() as Map<String, dynamic>?;
-
-                    if (itemData == null) {
-                      return ListTile(title: Text('Elemento no encontrado'));
+                    // Si el documento no existe, eliminarlo de favoritos y salir
+                    if (!itemSnapshot.hasData || !itemSnapshot.data!.exists) {
+                      _removeFavorite(itemId); // Eliminar el favorito de la base de datos
+                      return SizedBox.shrink(); // No mostrar nada si no existe
                     }
 
-                    // Obtener la distancia en double o asignar un texto adecuado si no está disponible
-                    final double distance = favorito['distance'] != null
-                        ? favorito['distance'] as double
-                        : 0.0;
-                    
-                    final String distanceText = distance != 0.0 
-                        ? "${(distance / 1000).toStringAsFixed(1)} km de distancia"
-                        : "Distancia no disponible";
+                    final itemData = itemSnapshot.data!.data() as Map<String, dynamic>;
 
                     return itemType == 'perro'
                         ? PerroCard(
@@ -72,12 +70,12 @@ class FavoritesScreen extends StatelessWidget {
                           )
                         : ComercioCard(
                             titulo: itemData['username'] ?? 'Sin Nombre',
+                            distance: '',
                             descripcion: itemData['description'] ?? 'Sin Descripción',
                             imagen: itemData['businessImages'] != null &&
                                     itemData['businessImages'].isNotEmpty
                                 ? itemData['businessImages'][0]
                                 : itemData['profileImage'],
-                            distance: distanceText, // Convertir en String para mostrar
                             onTap: () => onComercioSelected({
                               'comercioId': itemId,
                               ...itemData,
