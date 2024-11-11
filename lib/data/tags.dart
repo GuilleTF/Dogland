@@ -1,0 +1,22 @@
+// Etiquetas para el rol de Comercio en la app
+const List<String> etiquetasDeComercio = [
+  "Adiestramiento conductual",
+  "Alojamiento",
+  "Asesoría en nutrición",
+  "Atención de emergencia",
+  "Clínica de urgencias",
+  "Consultoría de bienestar",
+  "Cuidado especializado",
+  "Entrenamiento",
+  "Guardería",
+  "Hotel",
+  "Juguetes y entretenimiento",
+  "Peluquería y grooming",
+  "Rehabilitación y terapia",
+  "Servicio de paseo",
+  "Servicios veterinarios",
+  "Socialización guiada",
+  "Spa relajante",
+  "Transporte",
+  "Venta de alimentos",
+];
