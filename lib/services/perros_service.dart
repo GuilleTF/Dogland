@@ -19,7 +19,7 @@ class PerrosService {
 
     return querySnapshot.docs.map((doc) {
       var data = doc.data() as Map<String, dynamic>;
-      data['id'] = doc.id;  // Añadir el ID del documento a los datos
+      data['id'] = doc.id;
       return data;
     }).toList();
   }

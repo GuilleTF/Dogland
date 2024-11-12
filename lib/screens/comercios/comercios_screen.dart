@@ -86,7 +86,6 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
               initialValue: _selectedTags,
             ),
           ),
-          // Mostrar el botón "Quitar Filtros" solo si hay etiquetas seleccionadas
           if (_selectedTags.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8.0),

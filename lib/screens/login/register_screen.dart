@@ -21,10 +21,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final FocusNode _locationFocusNode = FocusNode();
   final FocusNode _phoneFocusNode = FocusNode();
   LatLng? _locationCoordinates;
-  String? _selectedRole = 'Usuario'; // Rol preseleccionado
+  String? _selectedRole = 'Usuario';
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
-  List<String> _selectedTags = []; // Etiquetas seleccionadas por el usuario
+  List<String> _selectedTags = [];
 
   Future<void> _registerUser() async {
     bool isFormValid = _formKey.currentState?.saveAndValidate() ?? false;
@@ -90,7 +90,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'location': _locationCoordinates != null
             ? GeoPoint(_locationCoordinates!.latitude, _locationCoordinates!.longitude)
             : null,
-        'tags': _selectedRole == 'Comercio' ? _selectedTags : null, // Guardar etiquetas
+        'tags': _selectedRole == 'Comercio' ? _selectedTags : null,
       });
 
       Navigator.pushAndRemoveUntil(
@@ -321,8 +321,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       });
                     },
                     chipDisplay: MultiSelectChipDisplay(
-                      chipColor: Colors.white, // Fondo blanco para las etiquetas seleccionadas
-                      textStyle: TextStyle(color: Colors.black), // Texto negro para las etiquetas seleccionadas
+                      chipColor: Colors.white,
+                      textStyle: TextStyle(color: Colors.black),
                       onTap: (value) {
                         setState(() {
                           _selectedTags.remove(value);

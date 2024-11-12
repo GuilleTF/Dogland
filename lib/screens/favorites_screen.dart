@@ -47,13 +47,13 @@ class FavoritesScreen extends StatelessWidget {
                       .get(),
                   builder: (context, itemSnapshot) {
                     if (itemSnapshot.connectionState == ConnectionState.waiting) {
-                      return SizedBox.shrink(); // Opcional: mostrar un loader temporal
+                      return SizedBox.shrink();
                     }
 
-                    // Si el documento no existe, eliminarlo de favoritos y salir
+                    // Si el documento no existe, lo elimina de favoritos y sale
                     if (!itemSnapshot.hasData || !itemSnapshot.data!.exists) {
-                      _removeFavorite(itemId); // Eliminar el favorito de la base de datos
-                      return SizedBox.shrink(); // No mostrar nada si no existe
+                      _removeFavorite(itemId); // Elimina el favorito de la base de datos
+                      return SizedBox.shrink(); // No muestra nada si no existe
                     }
 
                     final itemData = itemSnapshot.data!.data() as Map<String, dynamic>;

@@ -5,14 +5,14 @@ class ComercioCard extends StatelessWidget {
   final String titulo;
   final String descripcion;
   final String? imagen;
-  final String distance; // Asegúrate de que sea String
+  final String distance;
   final VoidCallback onTap;
 
   const ComercioCard({
     Key? key,
     required this.titulo,
     required this.descripcion,
-    required this.distance, // Recibe el texto de distancia
+    required this.distance,
     this.imagen,
     required this.onTap,
   }) : super(key: key);

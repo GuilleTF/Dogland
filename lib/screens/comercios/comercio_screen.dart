@@ -45,7 +45,6 @@ class _ComercioScreenState extends State<ComercioScreen> {
   @override
   void initState() {
     super.initState();
-    print("Comercio ID en ComercioScreen: ${widget.comercioId}"); // Verificación adicional
     if (widget.comercioId.isEmpty) {
       print("Advertencia: comercioId está vacío al iniciar ComercioScreen");
     }
@@ -138,8 +137,7 @@ void _toggleFavorite() async {
               onShare: () => _showShareOptions(context, comercioUrl),
               onChat: () async {
                 final userId = FirebaseAuth.instance.currentUser!.uid;
-                print("Valor de widget.comercioId antes de abrir el chat: ${widget.comercioId} y userId: $userId");
-
+                
                 try {
                   final chatId = await widget._chatService.getOrCreateChat(userId, widget.comercioId);
 

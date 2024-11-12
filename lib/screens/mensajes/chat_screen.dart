@@ -86,9 +86,6 @@ class _ChatScreenState extends State<ChatScreen> {
         'lastMessage': text,
         'timestamp': FieldValue.serverTimestamp(),
       });
-
-      final updatedChat = await FirebaseFirestore.instance.collection('chats').doc(widget.chatId).get();
-      print("Estado del chat después de enviar el mensaje: ${updatedChat.data()}");
       
       setState(() {
         _hasSentMessage = true;

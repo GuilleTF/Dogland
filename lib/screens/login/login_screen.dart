@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Center(
-            child: SingleChildScrollView( // Scroll para evitar el desbordamiento
+            child: SingleChildScrollView(
               child: FormBuilder(
                 key: _formKey,
                 child: Column(

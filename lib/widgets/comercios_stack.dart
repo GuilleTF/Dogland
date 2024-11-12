@@ -19,7 +19,6 @@ class ComerciosStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("Contenido de selectedComercioData: $selectedComercioData");
 
     return IndexedStack(
       index: comerciosIndex,
@@ -27,7 +26,7 @@ class ComerciosStack extends StatelessWidget {
         ComerciosScreen(onComercioSelected: onComercioSelected),
         if (selectedComercioData != null && selectedComercioData!['comercioId'] != null)
           ComercioScreen(
-            comercioId: selectedComercioData!['comercioId'], // Se asegura de pasar comercioId
+            comercioId: selectedComercioData!['comercioId'],
             nombre: selectedComercioData!['username'] ?? 'Nombre no disponible',
             descripcion: selectedComercioData!['description'] ?? 'Sin descripción',
             imagenes: List<String>.from(selectedComercioData!['businessImages'] ?? []),

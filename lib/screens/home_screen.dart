@@ -11,7 +11,7 @@ import 'package:dogland/screens/login/login_screen.dart';
 import 'package:dogland/screens/perros/mis_perros_screen.dart';
 import 'package:dogland/screens/perros/perro_form_screen.dart';
 import 'package:dogland/widgets/perros_stack.dart';
-import 'package:dogland/screens/favorites_screen.dart'; // Importación manual de FavoritesScreen
+import 'package:dogland/screens/favorites_screen.dart';
 import 'package:dogland/screens/mensajes/chats_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       if (comercioData.containsKey('id') && comercioData['id'] != null) {
         _selectedComercioData = {
-          'comercioId': comercioData['id'], // Asegura que 'id' no esté vacío
+          'comercioId': comercioData['id'],
           'username': comercioData['username'] ?? 'Nombre no disponible',
           'description': comercioData['description'] ?? 'Descripción no disponible',
           'businessImages': List<String>.from(comercioData['businessImages'] ?? []),

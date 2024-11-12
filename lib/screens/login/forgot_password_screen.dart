@@ -12,13 +12,11 @@ class ForgotPasswordScreen extends StatelessWidget {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       
-      // Mostrar mensaje de éxito
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Correo de restablecimiento enviado")),
       );
     } on FirebaseAuthException catch (e) {
-      // Mostrar mensaje de error
-      ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: ${e.message}")),
       );
     }
@@ -83,7 +81,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                 },
                 child: const Text('Enviar Enlace de Restablecimiento'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white, // Cambiar color del botón
+                  backgroundColor: Colors.white,
                 ),
               ),
             ],

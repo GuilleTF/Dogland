@@ -52,7 +52,7 @@ class FavoritesService {
     return favoriteSnapshot.exists;
   }
 
-  // Obtener todos los favoritos del usuario
+  // Obtiene todos los favoritos del usuario
   Stream<List<Map<String, dynamic>>> getFavorites() {
     final userId = _auth.currentUser?.uid;
     if (userId == null) {

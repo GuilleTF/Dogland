@@ -5,13 +5,13 @@ class ActionIcons extends StatelessWidget {
   final VoidCallback onShare;
   final VoidCallback onChat;
   final VoidCallback onFavoriteToggle;
-  final bool isFavorite; // Agregado: indica si es favorito
+  final bool isFavorite;
 
   const ActionIcons({
     required this.onShare,
     required this.onChat,
     required this.onFavoriteToggle,
-    this.isFavorite = false, // Valor por defecto a false
+    this.isFavorite = false,
   });
 
   @override
@@ -21,7 +21,7 @@ class ActionIcons extends StatelessWidget {
       children: [
         _buildActionIcon(Icons.share, onShare),
         _buildActionIcon(Icons.chat, onChat),
-        _buildFavoriteIcon(), // Modificado para manejar el estado de favorito
+        _buildFavoriteIcon(),
       ],
     );
   }
@@ -45,7 +45,7 @@ class ActionIcons extends StatelessWidget {
   // Icono de favorito específico
   Widget _buildFavoriteIcon() {
     return GestureDetector(
-      onTap: onFavoriteToggle, // Llama a la función para alternar el favorito
+      onTap: onFavoriteToggle,
       child: Container(
         width: 50,
         height: 50,
@@ -54,8 +54,8 @@ class ActionIcons extends StatelessWidget {
           border: Border.all(color: Colors.black, width: 2),
         ),
         child: Icon(
-          isFavorite ? Icons.favorite : Icons.favorite_border, // Cambia el ícono
-          color: isFavorite ? Colors.red : Colors.black, // Color del ícono según estado
+          isFavorite ? Icons.favorite : Icons.favorite_border,
+          color: isFavorite ? Colors.red : Colors.black,
         ),
       ),
     );

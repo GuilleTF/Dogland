@@ -39,7 +39,7 @@ class _PerrosScreenState extends State<PerrosScreen> {
   void _loadCriadores() async {
     setState(() => _isLoading = true);
 
-    // Cargar los criadores
+    // Carga los criadores
     FirebaseFirestore.instance
         .collection('users')
         .where('role', isEqualTo: 'Criador')
@@ -47,21 +47,21 @@ class _PerrosScreenState extends State<PerrosScreen> {
         .listen((snapshot) async {
       List<Map<String, dynamic>> criadores = [];
 
-      // Obtener los datos de cada criador
+      // Obtiene los datos de cada criador
       for (var doc in snapshot.docs) {
         var criadorData = doc.data() as Map<String, dynamic>;
         criadorData['id'] = doc.id;
 
-        // Consultar los perros de cada criador usando el userId
+        // Consulta los perros de cada criador usando el userId
         var perrosSnapshot = await FirebaseFirestore.instance
             .collection('perros')
             .where('userId', isEqualTo: doc.id)
             .get();
 
-        // Añadir los perros al criador
+        // Añade los perros al criador
         criadorData['perros'] = perrosSnapshot.docs.map((p) => p.data()).toList();
 
-        // Añadir a la lista de criadores
+        // Añade a la lista de criadores
         criadores.add(criadorData);
       }
 
@@ -79,7 +79,7 @@ class _PerrosScreenState extends State<PerrosScreen> {
       List<Map<String, dynamic>> criadores = await _locationBasedService.getNearbyItems('Criador');
       setState(() {
         _nearbyCriadores = criadores;
-        _filteredCriadores = criadores;  // Mostrar sólo los cercanos
+        _filteredCriadores = criadores;
         _isLoading = false;
       });
     } catch (e) {
@@ -107,7 +107,6 @@ class _PerrosScreenState extends State<PerrosScreen> {
         return matchesSearch && matchesRaza && matchesSexo && matchesPrice;
       }).toList();
 
-      // Si se quitaron todos los filtros, mostrar todos los criadores
       if (_selectedRaza == null && _selectedSexo == null && _minPrice == null && _maxPrice == null && query.isEmpty) {
         _filteredCriadores = _allCriadores;
       }

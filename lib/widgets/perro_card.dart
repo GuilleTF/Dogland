@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 
 class PerroCard extends StatelessWidget {
   final Map<String, dynamic> perro;
-  final VoidCallback? onEdit; // Cambiado a opcional
-  final VoidCallback? onDelete; // Cambiado a opcional
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
   final VoidCallback? onTap;
-  final bool showActions; // Añadido para controlar la visibilidad de los botones
+  final bool showActions;
 
   PerroCard({
     required this.perro,
     this.onEdit,
     this.onDelete,
     this.onTap,
-    this.showActions = true, // Por defecto, muestra los botones
+    this.showActions = true,
   });
 
   @override

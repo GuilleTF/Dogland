@@ -24,9 +24,6 @@ class PerrosStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("Datos de selectedPerroData en PerrosStack: $selectedPerroData");
-    print("Datos de selectedCriadorData en PerrosStack: $selectedCriadorData");
-
     return IndexedStack(
       index: perrosIndex,
       children: [

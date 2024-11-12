@@ -67,8 +67,8 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
                 minPrice = null;
                 maxPrice = null;
               });
-              widget.onMinPriceChanged(0); // Restablece al valor mínimo
-              widget.onMaxPriceChanged(1000); // Restablece al valor máximo
+              widget.onMinPriceChanged(0);
+              widget.onMaxPriceChanged(1000);
               Navigator.pop(context);
             },
           ),

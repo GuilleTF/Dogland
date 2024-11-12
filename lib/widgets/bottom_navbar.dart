@@ -13,9 +13,9 @@ class CustomBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 70,  // Ajusta la altura del BottomNavigationBar
+      height: 70,
       child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,  // Fija el tipo para que siempre se muestre el texto
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -37,10 +37,10 @@ class CustomBottomNavBar extends StatelessWidget {
         currentIndex: currentIndex,
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
-        selectedIconTheme: IconThemeData(size: 35),  // Aumentar tamaño del ícono seleccionado
-        unselectedIconTheme: IconThemeData(size: 30), // Aumentar tamaño del ícono no seleccionado
-        selectedLabelStyle: TextStyle(fontSize: 14),  // Tamaño del texto para ítems seleccionados
-        unselectedLabelStyle: TextStyle(fontSize: 12), // Tamaño del texto para ítems no seleccionados
+        selectedIconTheme: IconThemeData(size: 35),
+        unselectedIconTheme: IconThemeData(size: 30),
+        selectedLabelStyle: TextStyle(fontSize: 14),
+        unselectedLabelStyle: TextStyle(fontSize: 12),
         onTap: onTap,
       ),
     );

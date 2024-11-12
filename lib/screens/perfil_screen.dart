@@ -1,5 +1,4 @@
 // perfil_screen.dart
-
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dogland/services/profile_service.dart';
@@ -43,7 +42,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   LatLng? _locationCoordinates;
   bool _isLoading = false;
   String userRole = '';
-  List<String> _selectedTags = []; // Lista de etiquetas seleccionadas para comercio
+  List<String> _selectedTags = [];
 
   // Valores iniciales para comparaciones
   late String initialName;
@@ -73,7 +72,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         userRole = userDataMap['role'] ?? '';
         _profileImageUrl = userDataMap['profileImage'];
         
-        // Cargar etiquetas seleccionadas si es Comercio
+       
         if (userRole == 'Comercio' && userDataMap['tags'] != null) {
           _selectedTags = List<String>.from(userDataMap['tags']);
         }
@@ -160,7 +159,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         'email': _email,
         'profileImage': profileImageUrl,
         'businessImages': businessImageUrls,
-        'tags': userRole == 'Comercio' ? _selectedTags : null, // Actualiza etiquetas
+        'tags': userRole == 'Comercio' ? _selectedTags : null,
       };
 
       await _profileService.updateProfileData(data);
