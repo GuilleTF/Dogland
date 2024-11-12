@@ -2,9 +2,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dogland/widgets/image_carousel.dart';
-import 'package:dogland/widgets/contact_info.dart';
 import 'package:dogland/widgets/action_icons.dart';
-import 'package:dogland/widgets/map_view.dart';
 import 'package:dogland/widgets/share_options.dart';
 import 'package:dogland/services/favorites_service.dart';
 import 'package:dogland/screens/mensajes/chat_screen.dart';

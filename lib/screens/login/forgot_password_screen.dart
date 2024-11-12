@@ -8,13 +8,19 @@ import '../../utils/colors_utils.dart';
 class ForgotPasswordScreen extends StatelessWidget {
   final _formKey = GlobalKey<FormBuilderState>();
 
-  Future<void> _sendPasswordResetEmail(String email) async {
+  Future<void> _sendPasswordResetEmail(BuildContext context, String email) async {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      
       // Mostrar mensaje de éxito
-      print("Correo de restablecimiento enviado");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Correo de restablecimiento enviado")),
+      );
     } on FirebaseAuthException catch (e) {
-      print("Error: ${e.message}");
+      // Mostrar mensaje de error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${e.message}")),
+      );
     }
   }
 
@@ -53,6 +59,12 @@ class ForgotPasswordScreen extends StatelessWidget {
                   decoration: InputDecoration(
                     labelText: 'Correo Electrónico',
                     labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
                   ),
                   style: TextStyle(color: Colors.white),
                   validator: FormBuilderValidators.compose([
@@ -65,10 +77,14 @@ class ForgotPasswordScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState?.saveAndValidate() ?? false) {
-                    _sendPasswordResetEmail(_formKey.currentState?.value['email']);
+                    final email = _formKey.currentState?.value['email'];
+                    _sendPasswordResetEmail(context, email);
                   }
                 },
                 child: const Text('Enviar Enlace de Restablecimiento'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white, // Cambiar color del botón
+                ),
               ),
             ],
           ),
