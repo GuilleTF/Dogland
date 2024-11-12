@@ -1,3 +1,4 @@
+// widgets/custom_search_bar.dart
 import 'package:flutter/material.dart';
 
 class CustomSearchBar extends StatefulWidget {
@@ -7,9 +8,10 @@ class CustomSearchBar extends StatefulWidget {
   final List<String> razas;
   final ValueChanged<String?> onRazaFilterChanged;
   final ValueChanged<String?> onSexoFilterChanged;
-  final ValueChanged<RangeValues> onPriceFilterChanged;
+  final ValueChanged<int> onMinPriceChanged;
+  final ValueChanged<int> onMaxPriceChanged;
   final bool showFilters;
-  final bool showLocationFilter; // Nueva bandera para controlar la visibilidad del botón de ubicación
+  final bool showLocationFilter;
 
   CustomSearchBar({
     required this.searchController,
@@ -18,9 +20,10 @@ class CustomSearchBar extends StatefulWidget {
     required this.razas,
     required this.onRazaFilterChanged,
     required this.onSexoFilterChanged,
-    required this.onPriceFilterChanged,
+    required this.onMinPriceChanged,
+    required this.onMaxPriceChanged,
     required this.showFilters,
-    this.showLocationFilter = false, // El botón de ubicación estará oculto por defecto
+    this.showLocationFilter = false,
   });
 
   @override
@@ -30,7 +33,65 @@ class CustomSearchBar extends StatefulWidget {
 class _CustomSearchBarState extends State<CustomSearchBar> {
   String? selectedRaza;
   String? selectedSexo;
-  RangeValues priceRange = RangeValues(0, 1000);
+  int? minPrice;
+  int? maxPrice;
+
+  void _openPriceFilterDialog() {
+    int? tempMinPrice = minPrice;
+    int? tempMaxPrice = maxPrice;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Filtrar por Precio"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: "Precio mínimo"),
+              onChanged: (value) => tempMinPrice = int.tryParse(value),
+            ),
+            TextField(
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: "Precio máximo"),
+              onChanged: (value) => tempMaxPrice = int.tryParse(value),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            child: Text("Quitar filtro"),
+            onPressed: () {
+              setState(() {
+                minPrice = null;
+                maxPrice = null;
+              });
+              widget.onMinPriceChanged(0);
+              widget.onMaxPriceChanged(1000);
+              Navigator.pop(context);
+            },
+          ),
+          TextButton(
+            child: Text("Cancelar"),
+            onPressed: () => Navigator.pop(context),
+          ),
+          TextButton(
+            child: Text("Aplicar"),
+            onPressed: () {
+              setState(() {
+                minPrice = tempMinPrice;
+                maxPrice = tempMaxPrice;
+              });
+              widget.onMinPriceChanged(minPrice ?? 0);
+              widget.onMaxPriceChanged(maxPrice ?? 1000);
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +99,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
       padding: const EdgeInsets.all(8.0),
       child: Column(
         children: [
-          // TextField para la búsqueda por texto
+          // Búsqueda por texto
           TextField(
             controller: widget.searchController,
             decoration: InputDecoration(
@@ -52,15 +113,14 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
           ),
           SizedBox(height: 8.0),
 
-          // Mostrar los filtros adicionales solo si showFilters es true
+          // Filtros de raza, sexo, precio y ubicación
           if (widget.showFilters) ...[
-            // Colocar filtros de raza y sexo en una fila (Row)
             Row(
               children: [
-                // Botón de filtro de raza
+                // Filtro de raza
                 Expanded(
                   child: _buildFilterButton(
-                    label: selectedRaza ?? 'Filtrar por Raza',
+                    label: selectedRaza ?? 'Raza',
                     items: widget.razas,
                     onSelected: (value) {
                       setState(() {
@@ -70,12 +130,12 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
                     },
                   ),
                 ),
-                SizedBox(width: 8.0), // Espacio entre los dos botones
+                SizedBox(width: 8.0),
 
-                // Botón de filtro de sexo
+                // Filtro de sexo
                 Expanded(
                   child: _buildFilterButton(
-                    label: selectedSexo ?? 'Filtrar por Sexo',
+                    label: selectedSexo ?? 'Sexo',
                     items: ['Macho', 'Hembra'],
                     onSelected: (value) {
                       setState(() {
@@ -85,36 +145,24 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
                     },
                   ),
                 ),
-              ],
-            ),
-            SizedBox(height: 8.0),
+                SizedBox(width: 8.0),
 
-            // RangeSlider para el intervalo de precios
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Filtrar por Precio (€):'),
-                RangeSlider(
-                  values: priceRange,
-                  min: 0,
-                  max: 1000,
-                  divisions: 10,
-                  labels: RangeLabels(
-                    '${priceRange.start.toInt()}€',
-                    '${priceRange.end.toInt()}€',
+                // Filtro de precio con botón que abre el diálogo
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _openPriceFilterDialog,
+                    child: Text(
+                      minPrice != null || maxPrice != null
+                          ? 'Precio: ${minPrice ?? 0} - ${maxPrice ?? '∞'}€'
+                          : 'Precio',
+                    ),
                   ),
-                  onChanged: (RangeValues values) {
-                    setState(() {
-                      priceRange = values;
-                    });
-                    widget.onPriceFilterChanged(values);
-                  },
                 ),
               ],
             ),
           ],
 
-          // Mostrar el botón de ubicación solo si showLocationFilter es true
+          // Botón de ubicación si `showLocationFilter` es `true`
           if (widget.showLocationFilter)
             ElevatedButton.icon(
               icon: Icon(Icons.location_on),
@@ -126,7 +174,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
     );
   }
 
-  // Widget personalizado para el botón de filtro que muestra un BottomSheet con scroll
+  // Widget personalizado para el botón de filtro
   Widget _buildFilterButton({
     required String label,
     required List<String> items,
@@ -138,9 +186,9 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
           context: context,
           builder: (context) {
             return Container(
-              height: 300,  // Tamaño fijo para que no ocupe toda la pantalla
+              height: 300,
               child: ListView.builder(
-                itemCount: items.length + 1,  // Incluye la opción de quitar filtro
+                itemCount: items.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return ListTile(

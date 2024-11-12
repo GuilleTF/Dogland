@@ -1,15 +1,18 @@
+// widgets/comercio_card.dart
 import 'package:flutter/material.dart';
 
 class ComercioCard extends StatelessWidget {
   final String titulo;
   final String descripcion;
-  final String? imagen; // Acepta null para manejar la imagen
+  final String? imagen;
+  final String distance;
   final VoidCallback onTap;
 
   const ComercioCard({
     Key? key,
     required this.titulo,
     required this.descripcion,
+    required this.distance,
     this.imagen,
     required this.onTap,
   }) : super(key: key);
@@ -19,8 +22,8 @@ class ComercioCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        elevation: 5,
-        margin: const EdgeInsets.symmetric(vertical: 12.0),
+        elevation: 4,
+        margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
@@ -29,10 +32,9 @@ class ComercioCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Imagen o ícono predeterminado
               Container(
-                width: 100,
-                height: 100,
+                width: 95,
+                height: 95,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12.0),
                   color: Colors.grey[200],
@@ -43,33 +45,34 @@ class ComercioCard extends StatelessWidget {
                         child: Image.network(
                           imagen!,
                           fit: BoxFit.cover,
-                          width: 100,
-                          height: 100,
+                          width: 95,
+                          height: 95,
                         ),
                       )
                     : Icon(
                         Icons.store,
-                        size: 50,
+                        size: 80,
                         color: Colors.grey[600],
                       ),
               ),
-              const SizedBox(width: 15),
-              // Título y descripción
+              const SizedBox(width: 16.0),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      titulo.isNotEmpty ? titulo : 'Nombre no disponible',
-                      style: const TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      titulo,
+                      style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      descripcion.isNotEmpty ? descripcion : 'Sin descripción',
-                      style: const TextStyle(fontSize: 14.0, color: Colors.black54),
+                      descripcion,
+                      style: const TextStyle(fontSize: 16.0, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      distance,
+                      style: const TextStyle(fontSize: 14.0, color: Colors.black45),
                     ),
                   ],
                 ),

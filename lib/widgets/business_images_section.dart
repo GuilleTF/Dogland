@@ -27,9 +27,6 @@ class BusinessImagesSection extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final imageSize = screenWidth * 0.3;
 
-    // Verifica si las imágenes están presentes
-    print('Mostrando ${mobileImages.length} imágenes locales y ${webImages.length} imágenes descargadas.');
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -44,7 +41,7 @@ class BusinessImagesSection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             children: [
               ...List.generate(
-                mobileImages.length + webImages.length,  // Mezcla ambas listas
+                mobileImages.length + webImages.length,
                 (index) {
                   if (index < mobileImages.length) {
                     // Mostrar imágenes locales

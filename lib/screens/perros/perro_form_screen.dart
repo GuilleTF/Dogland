@@ -79,14 +79,14 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
         uploadedImageUrls.addAll(_perroImageUrls);
 
         // Datos del perro, incluyendo userId
-        String userId = user.uid;  // Asignar el userId desde el usuario autenticado
+        String userId = user.uid;
         Map<String, dynamic> perroData = {
-          'raza': formData!['raza'], // La raza seleccionada
+          'raza': formData!['raza'],
           'genero': formData['genero'],
-          'precio': double.parse(formData['precio']),  // Asegurarse de convertir 'precio' a double
+          'precio': double.parse(formData['precio']),
           'descripcion': formData['descripcion'],
           'images': uploadedImageUrls,
-          'userId': userId, // Asegurar que 'userId' se guarde correctamente
+          'userId': userId,
         };
 
         // Guardar o actualizar el perro en Firestore
@@ -134,10 +134,12 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
                                       .toLowerCase()
                                       .contains(textEditingValue.text.toLowerCase()));
                                 },
+                                initialValue: TextEditingValue(text: widget.perro?['raza'] ?? ''),
                                 onSelected: (String raza) {
                                   field.didChange(raza); // Notificar al FormBuilder
                                 },
                                 fieldViewBuilder: (BuildContext context, TextEditingController textEditingController, FocusNode focusNode, VoidCallback onFieldSubmitted) {
+                                  textEditingController.text = widget.perro?['raza'] ?? '';
                                   return TextField(
                                     controller: textEditingController,
                                     focusNode: focusNode,

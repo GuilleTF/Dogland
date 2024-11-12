@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dogland/widgets/comercio_card.dart';
-import 'package:dogland/widgets/custom_search_bar.dart';
+import 'package:dogland/services/location_based_service.dart';
+import 'package:multi_select_flutter/multi_select_flutter.dart';
+import '../../data/tags.dart';
 
 class ComerciosScreen extends StatefulWidget {
   final Function(Map<String, dynamic>) onComercioSelected;
@@ -13,48 +15,52 @@ class ComerciosScreen extends StatefulWidget {
 }
 
 class _ComerciosScreenState extends State<ComerciosScreen> {
-  TextEditingController _searchController = TextEditingController();
-  List<QueryDocumentSnapshot> _allComercios = [];
-  List<QueryDocumentSnapshot> _filteredComercios = [];
+  final LocationBasedService _locationBasedService = LocationBasedService();
+
+  List<Map<String, dynamic>> _nearbyComercios = [];
+  List<String> _selectedTags = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadComercios();
-    _searchController.addListener(_filterComercios);
+    _loadNearbyComercios();
   }
 
-  @override
-  void dispose() {
-    _searchController.removeListener(_filterComercios);
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _loadComercios() {
-    FirebaseFirestore.instance
-        .collection('users')
-        .where('role', isEqualTo: 'Comercio')
-        .snapshots()
-        .listen((snapshot) {
+  void _loadNearbyComercios() async {
+    setState(() => _isLoading = true);
+    try {
+      List<Map<String, dynamic>> comercios = await _locationBasedService.getNearbyItems('Comercio');
       setState(() {
-        _allComercios = snapshot.docs;
-        _filteredComercios = _allComercios; // Inicialmente muestra todos
+        _nearbyComercios = _applyTagFilter(comercios);
+        _isLoading = false;
       });
-    });
+    } catch (e) {
+      print("Error al cargar comercios cercanos: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
-  void _filterComercios() {
-    String query = _searchController.text.toLowerCase();
+  List<Map<String, dynamic>> _applyTagFilter(List<Map<String, dynamic>> comercios) {
+    if (_selectedTags.isEmpty) return comercios;
+    return comercios.where((comercio) {
+      List<dynamic>? tags = comercio['tags'] as List<dynamic>?;
+      return tags != null && tags.any((tag) => _selectedTags.contains(tag));
+    }).toList();
+  }
 
+  void _onTagFilterChanged(List<String> selectedTags) {
     setState(() {
-      _filteredComercios = _allComercios.where((doc) {
-        var data = doc.data() as Map<String, dynamic>;
-        final titleMatch = (data['username'] ?? '').toLowerCase().contains(query);
-        final descriptionMatch = (data['description'] ?? '').toLowerCase().contains(query);
-        return titleMatch || descriptionMatch;
-      }).toList();
+      _selectedTags = selectedTags;
     });
+    _loadNearbyComercios();
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _selectedTags = [];
+    });
+    _loadNearbyComercios();
   }
 
   @override
@@ -62,44 +68,55 @@ class _ComerciosScreenState extends State<ComerciosScreen> {
     return Scaffold(
       body: Column(
         children: [
-          CustomSearchBar(
-            searchController: _searchController,
-            onSearchChanged: (query) => _filterComercios(),
-            onLocationFilterPressed: () {
-              // Implementación de filtro de ubicación
-            },
-            razas: [],  // Vacío ya que no se usa en comercios
-            onRazaFilterChanged: (_) {},  // No hace nada
-            onSexoFilterChanged: (_) {},  // No hace nada
-            onPriceFilterChanged: (_) {}, // No hace nada
-            showFilters: false,
-            showLocationFilter: true,
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _filteredComercios.length,
-              itemBuilder: (context, index) {
-                var comercioData = _filteredComercios[index].data() as Map<String, dynamic>;
-                var comercioId = _filteredComercios[index].id;
-                
-                // Determinar la imagen que se mostrará en la tarjeta (solo de businessImages)
-                String? imagen = comercioData['businessImages'] != null &&
-                        comercioData['businessImages'].isNotEmpty
-                    ? comercioData['businessImages'][0] // Primera imagen de businessImages
-                    : null; // Ninguna imagen de perfil, solo el ícono si no hay imágenes de negocio
-
-                return ComercioCard(
-                  titulo: comercioData['username'] ?? 'Nombre no disponible',
-                  descripcion: comercioData['description'] ?? 'Sin descripción',
-                  imagen: imagen, // Asigna la imagen determinada
-                  onTap: () => widget.onComercioSelected({
-                      'comercioId': comercioId,
-                      ...comercioData
-                    }),
-                );
-              },
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: MultiSelectDialogField(
+              items: etiquetasDeComercio.map((tag) => MultiSelectItem(tag, tag)).toList(),
+              title: Text("Selecciona etiquetas"),
+              buttonText: Text("Filtrar por Etiquetas"),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                border: Border.all(
+                  color: Colors.grey,
+                  width: 1,
+                ),
+              ),
+              onConfirm: _onTagFilterChanged,
+              initialValue: _selectedTags,
             ),
           ),
+          if (_selectedTags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.clear),
+                label: Text('Quitar Filtros'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: _clearFilters,
+              ),
+            ),
+          _isLoading
+              ? Center(child: CircularProgressIndicator())
+              : Expanded(
+                  child: ListView.builder(
+                    itemCount: _nearbyComercios.length,
+                    itemBuilder: (context, index) {
+                      var comercio = _nearbyComercios[index];
+                      var distance = comercio['distance'];
+                      return ComercioCard(
+                        titulo: comercio['username'] ?? 'Sin Nombre',
+                        descripcion: comercio['description'] ?? 'Sin Descripción',
+                        imagen: comercio['businessImages']?.isNotEmpty == true ? comercio['businessImages'][0] : null,
+                        distance: distance != null ? "${(distance / 1000).toStringAsFixed(1)} km de distancia" : "Distancia no disponible",
+                        onTap: () => widget.onComercioSelected(comercio),
+                      );
+                    },
+                  ),
+                ),
         ],
       ),
     );

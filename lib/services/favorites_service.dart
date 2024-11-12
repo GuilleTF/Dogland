@@ -52,7 +52,7 @@ class FavoritesService {
     return favoriteSnapshot.exists;
   }
 
-  // Obtener todos los favoritos del usuario
+  // Obtiene todos los favoritos del usuario
   Stream<List<Map<String, dynamic>>> getFavorites() {
     final userId = _auth.currentUser?.uid;
     if (userId == null) {
@@ -71,5 +71,19 @@ class FavoritesService {
                 'timestamp': FieldValue.serverTimestamp(),
               };
             }).toList());
+  }
+
+  // Método para eliminar un favorito específico por su itemId
+  Future<void> removeFavorite(String itemId) async {
+    final userId = _auth.currentUser?.uid;
+    final snapshot = await _firestore
+        .collection('favorites')
+        .where('userId', isEqualTo: userId)
+        .where('itemId', isEqualTo: itemId)
+        .get();
+
+    for (var doc in snapshot.docs) {
+      await doc.reference.delete();
+    }
   }
 }

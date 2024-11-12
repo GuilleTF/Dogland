@@ -35,6 +35,10 @@ class ChatsListScreen extends StatelessWidget {
 
           final chats = snapshot.data!.docs;
 
+          if (chats.isEmpty) {
+            return Center(child: Text("No tienes chats todavía"));
+          }
+
           return ListView.builder(
             itemCount: chats.length,
             itemBuilder: (context, index) {

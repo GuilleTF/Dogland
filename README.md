@@ -1,16 +1,7 @@
 # dogland
 
-A new Flutter project.
+Aplicación Móvil para Gestión de Comercios Caninos.
 
-## Getting Started
+## Descripción
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Desarrollar una aplicación móvil, a ser posible multiplataforma, para dar publicidad a comercios relacionados con el mundo canino. Se incorporará un sistema de geolocalización que indique al usuario el lugar exacto donde se encuentre la empresa o lugar a visitar, así como un chat para poner en contacto de forma interna a aquellos interesados en algún producto o servicio. La aplicación deberá soportar al menos tres roles de usuario que deberán estar debidamente registrados en la app: administrador, el usuario particular y las empresas. Todos ellos tendrán diferentes vistas de la aplicación en función de su rol y podrán modificar parte de sus atributos. Así mismo, la App deberá poder conectarse a una base de datos alojada en un servidor remoto para almacenar toda la información de los usuarios.

@@ -9,11 +9,16 @@ class FavoritesScreen extends StatelessWidget {
   final FavoritesService favoritesService = FavoritesService();
   final Function(Map<String, dynamic>) onPerroSelected;
   final Function(Map<String, dynamic>) onComercioSelected;
-  
+
   FavoritesScreen({
     required this.onPerroSelected,
     required this.onComercioSelected,
   });
+
+  // Función para eliminar el favorito de la colección de favoritos
+  Future<void> _removeFavorite(String itemId) async {
+    await favoritesService.removeFavorite(itemId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +28,11 @@ class FavoritesScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             final favoritos = snapshot.data!;
+
+            if (favoritos.isEmpty) {
+              return Center(child: Text("No tienes favoritos todavía"));
+            }
+
             return ListView.builder(
               itemCount: favoritos.length,
               itemBuilder: (context, index) {
@@ -36,15 +46,17 @@ class FavoritesScreen extends StatelessWidget {
                       .doc(itemId)
                       .get(),
                   builder: (context, itemSnapshot) {
-                    if (!itemSnapshot.hasData) {
-                      return ListTile(title: Text('Cargando...'));
+                    if (itemSnapshot.connectionState == ConnectionState.waiting) {
+                      return SizedBox.shrink();
                     }
 
-                    final itemData = itemSnapshot.data!.data() as Map<String, dynamic>?;
-
-                    if (itemData == null) {
-                      return ListTile(title: Text('Elemento no encontrado'));
+                    // Si el documento no existe, lo elimina de favoritos y sale
+                    if (!itemSnapshot.hasData || !itemSnapshot.data!.exists) {
+                      _removeFavorite(itemId); // Elimina el favorito de la base de datos
+                      return SizedBox.shrink(); // No muestra nada si no existe
                     }
+
+                    final itemData = itemSnapshot.data!.data() as Map<String, dynamic>;
 
                     return itemType == 'perro'
                         ? PerroCard(
@@ -52,12 +64,13 @@ class FavoritesScreen extends StatelessWidget {
                             onTap: () => onPerroSelected({
                               'perroId': itemId,
                               'perro': itemData,
-                              'criador': itemData['userId'], // ID del usuario/criador
+                              'criador': itemData['userId'],
                             }),
-                            showActions: false
+                            showActions: false,
                           )
                         : ComercioCard(
                             titulo: itemData['username'] ?? 'Sin Nombre',
+                            distance: '',
                             descripcion: itemData['description'] ?? 'Sin Descripción',
                             imagen: itemData['businessImages'] != null &&
                                     itemData['businessImages'].isNotEmpty

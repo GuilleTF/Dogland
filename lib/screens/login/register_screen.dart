@@ -5,8 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:multi_select_flutter/multi_select_flutter.dart';
 import '../../utils/colors_utils.dart';
 import '../home_screen.dart';
+import '../../data/tags.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -19,33 +21,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final FocusNode _locationFocusNode = FocusNode();
   final FocusNode _phoneFocusNode = FocusNode();
   LatLng? _locationCoordinates;
-  String? _selectedRole = 'Usuario'; // Preseleccionado
+  String? _selectedRole = 'Usuario';
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
+  List<String> _selectedTags = [];
 
   Future<void> _registerUser() async {
-    // Guarda y valida el formulario completo
     bool isFormValid = _formKey.currentState?.saveAndValidate() ?? false;
     if (!isFormValid) return;
 
-    // Imprimir valores actuales para depuración
-    print("Formulario válido: $isFormValid");
-    print("Valor de _selectedRole: $_selectedRole");
-
-    // Obtiene los valores del formulario
     final formData = _formKey.currentState?.value ?? {};
-
-    // Imprimir todos los valores de formData
-    print("Datos del formulario: $formData");
-
-    // Recolecta mensajes de error para campos específicos
     String? email = formData['email'];
     String? password = formData['password'];
     String? confirmPassword = formData['confirm_password'];
     String? username = formData['username'];
     String? role = formData['role'];
     String? phoneNumber = formData['phone_number'];
-
-    // Imprimir valor de role para confirmar su estado
-    print("Valor de role: $role");
 
     // Condicionales específicos para cada campo
     if (username == null || username.isEmpty) {
@@ -73,7 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    if (role == null || role.isEmpty) {
+      if (role == null || role.isEmpty) {
       _showError("Por favor, selecciona un rol.");
       return;
     }
@@ -87,8 +78,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _showError("Por favor, ingresa un número de teléfono.");
       return;
     }
-
-    // Si todos los campos están completos y válidos, intenta registrar al usuario
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
@@ -101,13 +90,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'location': _locationCoordinates != null
             ? GeoPoint(_locationCoordinates!.latitude, _locationCoordinates!.longitude)
             : null,
+        'tags': _selectedRole == 'Comercio' ? _selectedTags : null,
       });
 
-      // Navega a HomeScreen
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
-        (route) => false, // Esto elimina la pantalla de registro y cualquier otra pantalla previa
+        (route) => false,
       );
     } on FirebaseAuthException catch (e) {
       _showError("Error al registrar el usuario: ${e.message}");
@@ -124,7 +113,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // Método para mostrar un SnackBar con un mensaje de error
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -187,8 +175,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Contraseña',
                     labelStyle: TextStyle(color: Colors.white),
+                    suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
                   ),
-                  obscureText: true,
+                  obscureText: !_isPasswordVisible,
                   validator: FormBuilderValidators.required(),
                 ),
                 FormBuilderTextField(
@@ -197,8 +196,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Confirmar Contraseña',
                     labelStyle: TextStyle(color: Colors.white),
+                    suffixIcon: IconButton(
+                        icon: Icon(
+                          _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                          });
+                        },
+                      ),
                   ),
-                  obscureText: true,
+                  obscureText: !_isConfirmPasswordVisible,
                   validator: FormBuilderValidators.compose([
                     FormBuilderValidators.required(),
                     (val) {
@@ -210,13 +220,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ]),
                 ),
                 FormBuilderDropdown<String>(
-                  name: 'role', // Nombre agregado para integrarse con FormBuilder
+                  name: 'role',
                   initialValue: _selectedRole,
                   decoration: InputDecoration(
                     labelText: 'Selecciona tu Rol',
                     labelStyle: TextStyle(color: Colors.white),
                   ),
-                  items: ['Usuario', 'Comercio', 'Criador','Admin']
+                  items: ['Usuario', 'Comercio', 'Criador']
                       .map((role) => DropdownMenuItem(
                             value: role,
                             child: Text(
@@ -282,6 +292,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                   ),
+                if (_selectedRole == 'Comercio')
+                  MultiSelectDialogField(
+                    items: etiquetasDeComercio.map((tag) => MultiSelectItem(tag, tag)).toList(),
+                    title: Text(
+                      "Selecciona etiquetas",
+                      style: TextStyle(color: Colors.black),
+                    ),
+                    selectedColor: Colors.blue,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                      border: Border.all(
+                        color: Colors.grey,
+                        width: 1,
+                      ),
+                    ),
+                    buttonText: Text(
+                      "Etiquetas",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                      ),
+                    ),
+                    onConfirm: (results) {
+                      setState(() {
+                        _selectedTags = results.cast<String>();
+                      });
+                    },
+                    chipDisplay: MultiSelectChipDisplay(
+                      chipColor: Colors.white,
+                      textStyle: TextStyle(color: Colors.black),
+                      onTap: (value) {
+                        setState(() {
+                          _selectedTags.remove(value);
+                        });
+                      },
+                    ),
+                  ),
+
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _registerUser,

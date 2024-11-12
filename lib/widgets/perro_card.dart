@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 
 class PerroCard extends StatelessWidget {
   final Map<String, dynamic> perro;
-  final VoidCallback? onEdit; // Cambiado a opcional
-  final VoidCallback? onDelete; // Cambiado a opcional
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
   final VoidCallback? onTap;
-  final bool showActions; // Añadido para controlar la visibilidad de los botones
+  final bool showActions;
 
   PerroCard({
     required this.perro,
     this.onEdit,
     this.onDelete,
     this.onTap,
-    this.showActions = true, // Por defecto, muestra los botones
+    this.showActions = true,
   });
 
   @override
@@ -24,7 +24,7 @@ class PerroCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+        margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
         elevation: 4,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
@@ -33,8 +33,8 @@ class PerroCard extends StatelessWidget {
             children: [
               // Imagen del perro
               Container(
-                width: 90,
-                height: 90,
+                width: 95,
+                height: 95,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12.0),
                   color: Colors.grey[200],
@@ -45,8 +45,8 @@ class PerroCard extends StatelessWidget {
                         child: Image.network(
                           imagen,
                           fit: BoxFit.cover,
-                          width: 90,
-                          height: 90,
+                          width: 95,
+                          height: 95,
                         ),
                       )
                     : Icon(
@@ -68,7 +68,7 @@ class PerroCard extends StatelessWidget {
                     SizedBox(height: 8.0),
                     Text(
                       '${perro['genero']} - ${perro['precio']}€',
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16, color: Colors.black54),
                     ),
                   ],
                 ),

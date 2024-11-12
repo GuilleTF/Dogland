@@ -8,10 +8,21 @@ import '../home_screen.dart';
 import '../../utils/colors_utils.dart';
 import 'legal_info_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
+  bool _isPasswordVisible = false;
+  String? _errorMessage;
 
   Future<void> _loginUser(BuildContext context) async {
+    setState(() {
+      _errorMessage = null;
+    });
+
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final formData = _formKey.currentState?.value;
       final String email = formData?['email'];
@@ -26,6 +37,9 @@ class LoginScreen extends StatelessWidget {
           MaterialPageRoute(builder: (context) => HomeScreen()),
         );
       } on FirebaseAuthException catch (e) {
+        setState(() {
+          _errorMessage = "Correo o contraseña incorrectos";
+        });
         print("Error: $e");
       }
     }
@@ -34,14 +48,14 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true, // Evita el solapamiento del teclado
+      resizeToAvoidBottomInset: true,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
               hexStringToColor("CB2B93"),
               hexStringToColor("9546C4"),
-              hexStringToColor("5E61F4")
+              hexStringToColor("5E61F4"),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -50,86 +64,109 @@ class LoginScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Center(
-            child: FormBuilder(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min, // Evita que el contenido se extienda al fondo
-                children: [
-                  Image.asset(
-                    'assets/images/dogland_logo.png',
-                    height: 200,
-                  ),
-                  SizedBox(height: 20),
-                  FormBuilderTextField(
-                    name: 'email',
-                    decoration: InputDecoration(
-                      labelText: 'Correo Electrónico',
-                      labelStyle: TextStyle(color: Colors.white),
+            child: SingleChildScrollView(
+              child: FormBuilder(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/images/dogland_logo.png',
+                      height: 200,
                     ),
-                    style: TextStyle(color: Colors.white),
-                    validator: FormBuilderValidators.compose([
-                      FormBuilderValidators.required(),
-                      FormBuilderValidators.email(),
-                    ]),
-                  ),
-                  FormBuilderTextField(
-                    name: 'password',
-                    decoration: InputDecoration(
-                      labelText: 'Contraseña',
-                      labelStyle: TextStyle(color: Colors.white),
-                    ),
-                    style: TextStyle(color: Colors.white),
-                    obscureText: true,
-                    validator: FormBuilderValidators.required(),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () => _loginUser(context),
-                    child: Text('Iniciar Sesión'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => ForgotPasswordScreen(),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      '¿Olvidaste tu contraseña?',
+                    SizedBox(height: 20),
+                    FormBuilderTextField(
+                      name: 'email',
+                      decoration: InputDecoration(
+                        labelText: 'Correo Electrónico',
+                        labelStyle: TextStyle(color: Colors.white),
+                      ),
                       style: TextStyle(color: Colors.white),
+                      validator: FormBuilderValidators.compose([
+                        FormBuilderValidators.required(),
+                        FormBuilderValidators.email(),
+                      ]),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => RegisterScreen(),
+                    FormBuilderTextField(
+                      name: 'password',
+                      obscureText: !_isPasswordVisible,
+                      decoration: InputDecoration(
+                        labelText: 'Contraseña',
+                        labelStyle: TextStyle(color: Colors.white),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
                         ),
-                      );
-                    },
-                    child: Text(
-                      'Registrarse',
+                      ),
                       style: TextStyle(color: Colors.white),
+                      validator: FormBuilderValidators.required(),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => LegalInfoScreen(),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'Términos y Política de Privacidad',
-                      style: TextStyle(
-                        color: Colors.white,
-                        decoration: TextDecoration.underline,
+                    if (_errorMessage != null) ...[
+                      SizedBox(height: 10),
+                      Text(
+                        _errorMessage!,
+                        style: TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                    ],
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () => _loginUser(context),
+                      child: Text('Iniciar Sesión'),
+                    ),
+                    
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ForgotPasswordScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        '¿Olvidaste tu contraseña?',
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
-                  ),
-                ],
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => RegisterScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Registrarse',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => LegalInfoScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Términos y Política de Privacidad',
+                        style: TextStyle(
+                          color: Colors.white,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

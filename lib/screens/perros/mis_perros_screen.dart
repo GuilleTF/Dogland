@@ -64,7 +64,7 @@ class _MisPerrosScreenState extends State<MisPerrosScreen> {
                   itemBuilder: (context, index) {
                     return PerroCard(
                       perro: _perros[index],
-                      onEdit: () => widget.onEditarPerroTapped(_perros[index]), // Ahora usa el callback
+                      onEdit: () => widget.onEditarPerroTapped(_perros[index]),
                       onDelete: () => _deletePerro(index),
                     );
                   },
@@ -74,7 +74,7 @@ class _MisPerrosScreenState extends State<MisPerrosScreen> {
         height: 70,
         child:
           FloatingActionButton(
-            onPressed: widget.onAgregarPerroTapped,  // Llama a la función que cambia el índice en HomeScreen
+            onPressed: widget.onAgregarPerroTapped,
             child: Icon(Icons.add, size: 30,),
           ),
       ),
