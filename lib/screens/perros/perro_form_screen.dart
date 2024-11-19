@@ -125,6 +125,10 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
                             name: 'raza',
                             initialValue: widget.perro?['raza'] ?? '',
                             builder: (FormFieldState<String?> field) {
+                              final TextEditingController textController = TextEditingController(
+                                text: field.value ?? widget.perro?['raza'] ?? '',
+                              );
+
                               return Autocomplete<String>(
                                 optionsBuilder: (TextEditingValue textEditingValue) {
                                   if (textEditingValue.text.isEmpty) {
@@ -134,14 +138,15 @@ class _PerroFormScreenState extends State<PerroFormScreen> {
                                       .toLowerCase()
                                       .contains(textEditingValue.text.toLowerCase()));
                                 },
-                                initialValue: TextEditingValue(text: widget.perro?['raza'] ?? ''),
+                                initialValue: TextEditingValue(text: field.value ?? widget.perro?['raza'] ?? ''),
                                 onSelected: (String raza) {
-                                  field.didChange(raza); // Notificar al FormBuilder
+                                  field.didChange(raza); // Actualizar el valor del FormBuilder
+                                  textController.text = raza; // Actualizar el controlador
                                 },
-                                fieldViewBuilder: (BuildContext context, TextEditingController textEditingController, FocusNode focusNode, VoidCallback onFieldSubmitted) {
-                                  textEditingController.text = widget.perro?['raza'] ?? '';
+                                fieldViewBuilder: (BuildContext context, TextEditingController controller, FocusNode focusNode, VoidCallback onFieldSubmitted) {
+                                  controller.text = textController.text; // Sincronizar el controlador
                                   return TextField(
-                                    controller: textEditingController,
+                                    controller: controller,
                                     focusNode: focusNode,
                                     decoration: InputDecoration(
                                       hintText: 'Escribe la raza del perro',
